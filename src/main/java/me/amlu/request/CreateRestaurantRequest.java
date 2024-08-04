@@ -1,6 +1,7 @@
 package me.amlu.request;
 
 import lombok.Data;
+import me.amlu.model.Address;
 import me.amlu.model.ContactInformation;
 
 import java.util.List;
@@ -12,10 +13,9 @@ public class CreateRestaurantRequest {
     private String restaurantName;
     private String description;
     private String cuisineType;
-    private String address;
+    private Address address;
     private ContactInformation contactInformation;
     private String openingHours;
-    private String closingHours;
     private List<String> images;
 
 }
