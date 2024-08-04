@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>me.amlu</groupId>
-	<artifactId>Online-Food-Ordering</artifactId>
+	<artifactId>Online-Food-Ordering-App</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Online-Food-Ordering</name>
 	<description>Online Food Ordering System</description>
