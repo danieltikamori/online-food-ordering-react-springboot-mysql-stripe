@@ -30,13 +30,14 @@ public class JwtTokenValidator extends OncePerRequestFilter {
 
         String jwt = request.getHeader(JwtConstant.JWT_HEADER);
 
+        // 01234567
         // Bearer token
 
         if(jwt != null) {
             jwt = jwt.substring(7);
             try {
                 SecretKey key = Keys.hmacShaKeyFor(JwtConstant.JWT_SECRET.getBytes());
-                Claims claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(jwt.replace(JwtConstant.JWT_PREFIX, "")).getPayload();
+                Claims claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(jwt).getPayload();
 
                 String email = String.valueOf(claims.get("email"));
                 String authorities = String.valueOf(claims.get("authorities"));
@@ -50,36 +51,8 @@ public class JwtTokenValidator extends OncePerRequestFilter {
             } catch (Exception e) {
                 throw new BadCredentialsException("Invalid JWT token: " + e.getMessage());
             }
-
         }
 
         filterChain.doFilter(request, response);
-
-
-//        String jwt = request.getHeader(JwtConstant.JWT_HEADER);
-//        if (jwt == null || !jwt.startsWith(JwtConstant.JWT_PREFIX)) {
-//            try {
-//                filterChain.doFilter(request, response);
-//            } catch (Exception e) {
-//                log.error("Error during filter: ", e);
-//                throw new ServletException("An error occurred while processing the request", e);
-//            }
-//            return;
-//        }
-//
-//        SecretKey key = Keys.hmacShaKeyFor(JwtConstant.JWT_SECRET.getBytes());
-//        Claims claims = Jwts.parser().verifyWith(key).build().parseSignedClaims(jwt.replace(JwtConstant.JWT_PREFIX, "")).getBody();
-//
-//        if (claims == null) {
-//            throw new BadCredentialsException("Invalid Token...");
-//        }
-//
-//        String email = String.valueOf(claims.get("email"));
-//        String authorities = String.valueOf(claims.get("authorities"));
-//
-//        List<GrantedAuthority> auth = AuthorityUtils.commaSeparatedStringToAuthorityList(authorities);
-//        Authentication authentication = new UsernamePasswordAuthenticationToken(email, null, auth);
-//        SecurityContextHolder.getContext().setAuthentication(authentication);
-
     }
 }

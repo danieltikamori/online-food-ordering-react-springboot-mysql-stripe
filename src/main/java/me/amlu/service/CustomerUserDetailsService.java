@@ -1,4 +1,4 @@
-package me.amlu.Service;
+package me.amlu.service;
 
 import me.amlu.model.USER_ROLE;
 import me.amlu.model.User;
@@ -18,6 +18,7 @@ public class CustomerUserDetailsService implements UserDetailsService {
 
     private final UserRepository userRepository;
 
+
     public CustomerUserDetailsService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
@@ -26,7 +27,7 @@ public class CustomerUserDetailsService implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByEmail(username);
 
-        if (user != null) {
+        if (user == null) {
             throw new UsernameNotFoundException("User not found with email: " + username + ".");
         }
 
