@@ -25,7 +25,7 @@ public class User {
 
     private String email;
 
-    // In order to avoid password leakage, we will use JsonIgnore and JsonProperty annotation as write-only.
+    // To avoid password leakage, we will use the JsonProperty annotation as write-only.
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(nullable = false)
     private String password;
