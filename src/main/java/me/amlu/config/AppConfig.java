@@ -15,6 +15,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -47,7 +48,7 @@ public class AppConfig {
             corsConfiguration.setAllowedMethods(Collections.singletonList("*"));
             corsConfiguration.setAllowCredentials(true);
             corsConfiguration.setAllowedHeaders(Collections.singletonList("*"));
-            corsConfiguration.setExposedHeaders(Arrays.asList("Authorization"));
+            corsConfiguration.setExposedHeaders(List.of("Authorization"));
             corsConfiguration.setMaxAge(3600L);
 
             return corsConfiguration;

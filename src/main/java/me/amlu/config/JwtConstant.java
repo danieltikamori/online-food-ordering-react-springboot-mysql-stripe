@@ -14,10 +14,6 @@ public class JwtConstant {
     private JwtConstant() {
     }
 
-    public static JwtConstant createJwtConstant() {
-        return new JwtConstant();
-    }
-
     private static String generateSecretKey() {
         byte[] randomBytes = new byte[KEY_LENGTH];
         secureRandom.nextBytes(randomBytes);
