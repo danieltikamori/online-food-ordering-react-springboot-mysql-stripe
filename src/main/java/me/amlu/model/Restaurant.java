@@ -29,7 +29,7 @@ public class Restaurant {
     private String restaurantName;
 
     private String description;
-    private String cuisine;
+    private String cuisineType;
 
     @ManyToOne
     private Address address;
