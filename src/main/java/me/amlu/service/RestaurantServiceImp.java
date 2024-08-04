@@ -12,6 +12,7 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
+import java.lang.reflect.Field;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,9 +35,7 @@ public class RestaurantServiceImp implements RestaurantService {
     public Restaurant createRestaurant(CreateRestaurantRequest restaurantRequest, User user) {
 
         try {
-            Address address = new Address();
-            address.setAddress(restaurantRequest.getAddress()); // Assuming there's a setter method for the address
-            address = addressRepository.save(address);
+            Address address = addressRepository.save(restaurantRequest.getAddress());
             Restaurant restaurant = new Restaurant();
             restaurant.setAddress(address);
             restaurant.setOwner(user);
@@ -45,7 +44,6 @@ public class RestaurantServiceImp implements RestaurantService {
             restaurant.setDescription(restaurantRequest.getDescription());
             restaurant.setContactInformation(restaurantRequest.getContactInformation());
             restaurant.setOpeningHours(restaurantRequest.getOpeningHours());
-            restaurant.setClosingHours(restaurantRequest.getClosingHours());
             restaurant.setImages(restaurantRequest.getImages());
             restaurant.setRegistrationDate(LocalDateTime.now());
             restaurant.setUpdateDate(LocalDateTime.now());
@@ -59,43 +57,30 @@ public class RestaurantServiceImp implements RestaurantService {
         }
     }
 
+    // RestaurantServiceImp.java
     @Override
     public Restaurant updateRestaurant(Long restaurantId, CreateRestaurantRequest updatedRestaurant) throws Exception {
         Optional<Restaurant> optionalRestaurant = restaurantRepository.findById(restaurantId);
-        Restaurant restaurant;
-        if (optionalRestaurant.isPresent()) {
-            restaurant = optionalRestaurant.get();
-            // Rest of the code
-        } else {
-            throw new RestaurantNotFoundException("Restaurant not found with ID: " + restaurantId);
+        Restaurant restaurant = optionalRestaurant.orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found with ID: " + restaurantId));
+
+        // Utilizando reflexão para atualizar as propriedades
+        for (Field field : updatedRestaurant.getClass().getDeclaredFields()) {
+            if (!field.getName().equals("id")) { // Ignora o ID
+                try {
+                    field.setAccessible(true);
+                    Object newValue = field.get(updatedRestaurant);
+                    if (newValue != null) {
+                        field.set(restaurant, newValue);
+                    }
+                } catch (IllegalAccessException e) {
+                    throw new RestaurantNotFoundException("Restaurant not found with ID: " + restaurantId);
+                }
+            }
         }
 
-        if (restaurant.getCuisineType() != null) {
-            restaurant.setCuisineType(updatedRestaurant.getCuisineType());
-        }
-        if (restaurant.getRestaurantName() != null) {
-            restaurant.setRestaurantName(updatedRestaurant.getRestaurantName());
-        }
-        if (restaurant.getDescription() != null) {
-            restaurant.setDescription(updatedRestaurant.getDescription());
-        }
-        if (restaurant.getContactInformation() != null) {
-            restaurant.setContactInformation(updatedRestaurant.getContactInformation());
-        }
-        if (restaurant.getOpeningHours() != null) {
-            restaurant.setOpeningHours(updatedRestaurant.getOpeningHours());
-        }
-        if (restaurant.getClosingHours() != null) {
-            restaurant.setClosingHours(updatedRestaurant.getClosingHours());
-        }
-        if (restaurant.getImages() != null) {
-            restaurant.setImages(updatedRestaurant.getImages());
-        }
-        if (restaurant.getUpdateDate() != null) {
-            restaurant.setUpdateDate(LocalDateTime.now());
-        }
         return restaurantRepository.save(restaurant);
     }
+
 
     @Override
     public Restaurant updateRestaurantStatus(Long restaurantId) throws Exception {
@@ -116,7 +101,7 @@ public class RestaurantServiceImp implements RestaurantService {
 
     @Override
     public List<Restaurant> getAllRestaurants() {
-        return List.of();
+        return restaurantRepository.findAll();
     }
 
     @Override
@@ -145,9 +130,7 @@ public class RestaurantServiceImp implements RestaurantService {
     public List<Restaurant> getRestaurantsByUserId(Long userId) throws Exception {
 
         Restaurant restaurant = restaurantRepository.findByOwnerId(userId);
-        if (restaurant == null) {
-            throw new RestaurantNotFoundException("Restaurant not found with owner ID: " + userId);
-        }
+        if (restaurant == null) return new ArrayList<>();
         List<Restaurant> restaurants = new ArrayList<>();
         restaurants.add(restaurant);
         return restaurants;
@@ -170,11 +153,6 @@ public class RestaurantServiceImp implements RestaurantService {
 
     @Override
     public List<Restaurant> getRestaurantsByOpeningHours(String openingHours) throws Exception {
-        return List.of();
-    }
-
-    @Override
-    public List<Restaurant> getRestaurantsByClosingHours(String closingHours) throws Exception {
         return List.of();
     }
 

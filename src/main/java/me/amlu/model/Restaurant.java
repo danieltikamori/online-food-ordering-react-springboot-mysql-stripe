@@ -34,15 +34,10 @@ public class Restaurant {
     @ManyToOne
     private Address address;
 
-    private String openingTime;
-    private String closingTime;
-
     @Embedded
     private ContactInformation contactInformation;
 
     private String openingHours;
-
-    private String closingHours;
 
     @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Order> orders = new ArrayList<>();

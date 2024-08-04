@@ -38,9 +38,6 @@ public interface RestaurantService {
 
     public List<Restaurant> getRestaurantsByOpeningHours(String openingHours) throws Exception;
 
-    public List<Restaurant> getRestaurantsByClosingHours(String closingHours) throws Exception;
-
-
     // Favorite methods
 
     public RestaurantDto addToFavorites(Long restaurantId, User user) throws Exception;
