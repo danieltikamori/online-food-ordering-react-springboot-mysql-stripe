@@ -5,14 +5,13 @@ import jakarta.persistence.*;
 import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.Getter;
 import lombok.NoArgsConstructor;
+import me.amlu.dto.ImageUrlDto;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Getter
 @Data
 @Entity
 @NoArgsConstructor
@@ -44,7 +43,7 @@ public class Restaurant {
 
     @ElementCollection
     @Column(length = 1000)
-    private List<String> images;
+    private List<ImageUrlDto> images;
 
     private LocalDateTime registrationDate;
 
@@ -52,11 +51,8 @@ public class Restaurant {
 
     private boolean openNow = true;
 
-
     @JsonIgnore
     @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Food> foods = new ArrayList<>();
-
-
 
 }

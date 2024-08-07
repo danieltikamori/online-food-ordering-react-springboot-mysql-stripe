@@ -1,6 +1,7 @@
 package me.amlu.request;
 
 import lombok.Data;
+import me.amlu.dto.ImageUrlDto;
 import me.amlu.model.Address;
 import me.amlu.model.ContactInformation;
 
@@ -16,6 +17,6 @@ public class CreateRestaurantRequest {
     private Address address;
     private ContactInformation contactInformation;
     private String openingHours;
-    private List<String> images;
+    private List<ImageUrlDto> images;
 
 }
