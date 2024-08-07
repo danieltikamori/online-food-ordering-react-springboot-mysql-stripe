@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import me.amlu.dto.ImageUrlDto;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -33,7 +34,7 @@ public class Food {
 
     @Column(length = 1000)
     @ElementCollection
-    private List<String> images;
+    private List<ImageUrlDto> images;
 
     private boolean available;
 
