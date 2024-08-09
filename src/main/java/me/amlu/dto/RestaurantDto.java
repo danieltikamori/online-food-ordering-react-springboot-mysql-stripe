@@ -2,11 +2,12 @@ package me.amlu.dto;
 
 import jakarta.persistence.Column;
 import lombok.Data;
+import me.amlu.model.FavoriteRestaurant;
 
 import java.util.List;
 
 @Data
-public class RestaurantDto {
+public class RestaurantDto extends FavoriteRestaurant {
 
     private String title;
 

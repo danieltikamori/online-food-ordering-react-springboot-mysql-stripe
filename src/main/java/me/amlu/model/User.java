@@ -6,10 +6,10 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import me.amlu.dto.RestaurantDto;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Entity
 @Data
@@ -36,11 +36,13 @@ public class User {
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "customer")
     private List<Order> orders = new ArrayList<>();
 
-    @ElementCollection
-    private List<RestaurantDto>favorites = new ArrayList<>();
+    @OneToMany(mappedBy = "userId", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<FavoriteRestaurant> favoriteRestaurants = new ArrayList<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Address> addresses = new ArrayList<>();
 
-
+    public <E> List<E> getRestaurants() {
+        return (List<E>) orders.stream().map(Order::getRestaurant).collect(Collectors.toList());
+    }
 }

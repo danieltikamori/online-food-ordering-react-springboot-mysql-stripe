@@ -56,7 +56,7 @@ public class AuthController {
        createdUser.setPassword(passwordEncoder.encode(user.getPassword()));
        createdUser.setRole(user.getRole());
        createdUser.setAddresses(user.getAddresses());
-       createdUser.setFavorites(user.getFavorites());
+       createdUser.setFavoriteRestaurants(user.getFavoriteRestaurants());
 
        User savedUser = userRepository.save(createdUser);
 
