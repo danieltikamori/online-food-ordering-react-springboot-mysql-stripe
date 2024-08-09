@@ -6,6 +6,7 @@ import me.amlu.model.User;
 import me.amlu.request.CreateRestaurantRequest;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface RestaurantService {
 
@@ -28,7 +29,7 @@ public interface RestaurantService {
 
     public Restaurant getRestaurantById(Long id) throws Exception;
 
-    public List<Restaurant> getRestaurantsByUserId(Long userId) throws Exception;
+    public Optional<Restaurant> getRestaurantsByUserId(Long userId) throws Exception;
 
     public List<Restaurant> getRestaurantsByCategory(String category) throws Exception;
 
@@ -42,7 +43,7 @@ public interface RestaurantService {
 
     public RestaurantDto addToFavorites(Long restaurantId, User user) throws Exception;
 
-//    public RestaurantDto removeFromFavorites(Long restaurantId, User user) throws Exception;
+//    public FavoriteRestaurantDto removeFromFavorites(Long restaurantId, User user) throws Exception;
 
 
 }

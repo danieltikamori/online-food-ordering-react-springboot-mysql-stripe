@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -47,6 +46,8 @@ public class RestaurantServiceImp implements RestaurantService {
             restaurant.setImages(restaurantRequest.getImages());
             restaurant.setRegistrationDate(LocalDateTime.now());
             restaurant.setUpdateDate(LocalDateTime.now());
+            user.getRestaurants().add(restaurant); // Add a restaurant to user's list
+            userRepository.save(user); // Save the user to persist the relationship
             return restaurantRepository.save(restaurant);
         } catch (ConstraintViolationException e) {
 
@@ -127,14 +128,10 @@ public class RestaurantServiceImp implements RestaurantService {
     }
 
     @Override
-    public List<Restaurant> getRestaurantsByUserId(Long userId) throws Exception {
-
-        Restaurant restaurant = restaurantRepository.findByOwnerId(userId);
-        if (restaurant == null) return new ArrayList<>();
-        List<Restaurant> restaurants = new ArrayList<>();
-        restaurants.add(restaurant);
-        return restaurants;
+    public Optional<Restaurant> getRestaurantsByUserId(Long userId) {
+        return restaurantRepository.findByOwnerId(userId);
     }
+
 
     @Override
     public List<Restaurant> getRestaurantsByCategory(String category) throws Exception {
@@ -167,10 +164,10 @@ public class RestaurantServiceImp implements RestaurantService {
         restaurantDto.setImages(restaurant.getImages());
         restaurantDto.setId(restaurantId);
 
-        if(user.getFavorites().contains(restaurantDto)) {
-            user.getFavorites().remove(restaurantDto);
+        if(user.getFavoriteRestaurants().contains(restaurantDto)) {
+            user.getFavoriteRestaurants().remove(restaurantDto);
         }
-        else user.getFavorites().add(restaurantDto);
+        else user.getFavoriteRestaurants().add(restaurantDto);
 
         userRepository.save(user);
         return restaurantDto;
