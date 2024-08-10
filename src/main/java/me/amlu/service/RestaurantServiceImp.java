@@ -116,6 +116,12 @@ public class RestaurantServiceImp implements RestaurantService {
         Optional<Restaurant> optionalRestaurant = restaurantRepository.findById(restaurantId);
         Restaurant restaurant = optionalRestaurant.orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found with ID: " + restaurantId));
 
+//        Restaurant restaurant = findRestaurantById(restaurantId);
+//
+//        if (restaurant == null) {
+//            throw new RestaurantNotFoundException("Restaurant not found with ID: " + restaurantId);
+//        }
+
         restaurantRepository.delete(restaurant);
     }
 
