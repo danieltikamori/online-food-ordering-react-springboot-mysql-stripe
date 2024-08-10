@@ -31,7 +31,7 @@ public class CartItem {
     @ElementCollection
     private List<String> ingredients;
 
-    private BigDecimal totalPrice;
+    private BigDecimal totalAmount;
 
 
 }
