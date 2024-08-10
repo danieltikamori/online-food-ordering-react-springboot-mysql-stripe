@@ -123,11 +123,6 @@ public class RestaurantServiceImp implements RestaurantService {
     }
 
     @Override
-    public Restaurant getRestaurantById(Long id) throws Exception {
-        return null;
-    }
-
-    @Override
     public Optional<Restaurant> getRestaurantsByUserId(Long userId) {
         return restaurantRepository.findByOwnerId(userId);
     }
