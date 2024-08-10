@@ -54,13 +54,13 @@ public class RestaurantController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Restaurant> getRestaurantById(
+    public ResponseEntity<Restaurant> findRestaurantById(
             @RequestHeader("Authorization") String token,
             @PathVariable Long id)
             throws Exception {
         User user = userService.findUserByJwtToken(token);
 
-        Restaurant restaurant = restaurantService.getRestaurantById(id);
+        Restaurant restaurant = restaurantService.findRestaurantById(id);
         if (restaurant == null) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
