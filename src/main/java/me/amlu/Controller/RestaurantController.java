@@ -1,7 +1,6 @@
 package me.amlu.Controller;
 
 import me.amlu.dto.RestaurantDto;
-import me.amlu.model.FavoriteRestaurant;
 import me.amlu.model.Restaurant;
 import me.amlu.model.User;
 import me.amlu.service.RestaurantNotFoundException;
