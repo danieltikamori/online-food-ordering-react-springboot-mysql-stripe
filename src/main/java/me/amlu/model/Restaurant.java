@@ -28,7 +28,7 @@ public class Restaurant {
     private String description;
     private String cuisineType;
 
-    @ManyToOne
+    @OneToOne
     private Address address;
 
     @Embedded
