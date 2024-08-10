@@ -188,6 +188,23 @@ public class RestaurantServiceImp implements RestaurantService {
         }
         else user.getFavoriteRestaurants().add(restaurantDto);
 
+//        ## Another approach instead of the if statement above that required
+//        to override the equals and hashCode methods:
+
+//        boolean isFavorited = false;
+//        List<RestaurantDto> favoriteRestaurants = user.getFavoriteRestaurants();
+//        for (RestaurantDto favoriteRestaurant : favoriteRestaurants) {
+//            if (favoriteRestaurant.getId().equals(restaurantId)) {
+//                isFavorited = true;
+//                break;
+//            }
+//        }
+//        if (isFavorited) {
+//            favoriteRestaurants.removeIf(favoriteRestaurant -> favoriteRestaurant.getId().equals(restaurantId));
+//        } else {
+//            favoriteRestaurants.add(restaurantDto);
+//        }
+
         userRepository.save(user);
         return restaurantDto;
     }
