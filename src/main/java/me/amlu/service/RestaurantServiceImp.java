@@ -64,9 +64,9 @@ public class RestaurantServiceImp implements RestaurantService {
         Optional<Restaurant> optionalRestaurant = restaurantRepository.findById(restaurantId);
         Restaurant restaurant = optionalRestaurant.orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found with ID: " + restaurantId));
 
-        // Utilizando reflexão para atualizar as propriedades
+        // Using reflection to update the fields
         for (Field field : updatedRestaurant.getClass().getDeclaredFields()) {
-            if (!field.getName().equals("id")) { // Ignora o ID
+            if (!field.getName().equals("id")) { // Ignore ID
                 try {
                     field.setAccessible(true);
                     Object newValue = field.get(updatedRestaurant);
@@ -78,6 +78,25 @@ public class RestaurantServiceImp implements RestaurantService {
                 }
             }
         }
+//        Restaurant restaurant = findRestaurantById(restaurantId);
+//        if(restaurant.getCuisineType() != null) {
+//            restaurant.setCuisineType(updatedRestaurant.getCuisineType());
+//        }
+//        if(restaurant.getDescription() != null) {
+//            restaurant.setDescription(updatedRestaurant.getDescription());
+//        }
+//        if(restaurant.getContactInformation() != null) {
+//            restaurant.setContactInformation(updatedRestaurant.getContactInformation());
+//        }
+//        if(restaurant.getOpeningHours() != null) {
+//            restaurant.setOpeningHours(updatedRestaurant.getOpeningHours());
+//        }
+//        if(restaurant.getImages() != null) {
+//            restaurant.setImages(updatedRestaurant.getImages());
+//        }
+//        if(restaurant.getRestaurantName() != null) {
+//            restaurant.setRestaurantName(updatedRestaurant.getRestaurantName());
+//        }
 
         return restaurantRepository.save(restaurant);
     }
