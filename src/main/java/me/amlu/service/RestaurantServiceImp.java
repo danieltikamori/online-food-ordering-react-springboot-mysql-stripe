@@ -46,8 +46,7 @@ public class RestaurantServiceImp implements RestaurantService {
             restaurant.setImages(restaurantRequest.getImages());
             restaurant.setRegistrationDate(LocalDateTime.now());
             restaurant.setUpdateDate(LocalDateTime.now());
-            user.getRestaurants().add(restaurant); // Add a restaurant to user's list
-            userRepository.save(user); // Save the user to persist the relationship
+
             return restaurantRepository.save(restaurant);
         } catch (ConstraintViolationException e) {
 
