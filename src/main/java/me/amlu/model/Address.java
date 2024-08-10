@@ -25,9 +25,4 @@ public class Address {
     private String postalCode;
     private String country;
 
-    public Address(Address address) {
-    }
-
-    public void setAddress(String address) {
-    }
 }
