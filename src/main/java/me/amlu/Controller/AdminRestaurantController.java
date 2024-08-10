@@ -40,19 +40,19 @@ public class AdminRestaurantController {
         return new ResponseEntity<>(restaurant, HttpStatus.CREATED);
     }
 
-    @PutMapping("/update")
+    @PutMapping("/{id}")
     public ResponseEntity<Restaurant> updateRestaurant(
             @RequestBody CreateRestaurantRequest restaurantRequest,
             @RequestHeader("Authorization") String token,
-            @PathVariable Long restaurantId)
+            @PathVariable Long id)
             throws Exception {
         User user = userService.findUserByJwtToken(token);
 
-        Restaurant restaurant = restaurantService.updateRestaurant(restaurantId, restaurantRequest);
+        Restaurant restaurant = restaurantService.updateRestaurant(id, restaurantRequest);
         if (restaurant == null) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
-        return new ResponseEntity<>(restaurant, HttpStatus.CREATED);
+        return new ResponseEntity<>(restaurant, HttpStatus.OK);
     }
 
     @DeleteMapping("/{id}")
