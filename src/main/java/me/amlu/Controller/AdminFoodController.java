@@ -7,7 +7,6 @@ import me.amlu.request.CreateFoodRequest;
 import me.amlu.response.MessageResponse;
 import me.amlu.service.FoodService;
 import me.amlu.service.RestaurantService;
-import me.amlu.service.UserNotFoundException;
 import me.amlu.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
