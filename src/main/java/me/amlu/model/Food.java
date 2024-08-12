@@ -31,7 +31,7 @@ public class Food {
 
     @Column(length = 1000)
     @ElementCollection
-    private List<ImageUrlDto> images;
+    private List<String> images;
 
     private boolean available;
 
