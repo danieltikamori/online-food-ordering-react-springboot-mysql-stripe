@@ -23,12 +23,12 @@ public class OrderItem {
 
     private int quantity;
 
-    private BigDecimal totalPrice;
+    private BigDecimal totalAmount;
 
     @ManyToOne
     private Order order;
 
-    @ElementCollection
+//    @ElementCollection
     private List<String> ingredients;
 
 

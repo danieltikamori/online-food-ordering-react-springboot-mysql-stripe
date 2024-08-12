@@ -46,6 +46,6 @@ public class Order {
 
     private int totalItems;
 
-    private BigDecimal totalPrice;
+    private BigDecimal totalAmount;
 
 }

@@ -6,8 +6,6 @@ import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import me.amlu.dto.ImageUrlDto;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +28,7 @@ public class Restaurant {
     private String description;
     private String cuisineType;
 
-    @ManyToOne
+    @OneToOne
     private Address address;
 
     @Embedded
@@ -43,7 +41,7 @@ public class Restaurant {
 
     @ElementCollection
     @Column(length = 1000)
-    private List<ImageUrlDto> images;
+    private List<String> images;
 
     private LocalDateTime registrationDate;
 

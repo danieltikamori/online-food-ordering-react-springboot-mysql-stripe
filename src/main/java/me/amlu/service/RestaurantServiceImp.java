@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -47,6 +46,7 @@ public class RestaurantServiceImp implements RestaurantService {
             restaurant.setImages(restaurantRequest.getImages());
             restaurant.setRegistrationDate(LocalDateTime.now());
             restaurant.setUpdateDate(LocalDateTime.now());
+
             return restaurantRepository.save(restaurant);
         } catch (ConstraintViolationException e) {
 
@@ -63,9 +63,9 @@ public class RestaurantServiceImp implements RestaurantService {
         Optional<Restaurant> optionalRestaurant = restaurantRepository.findById(restaurantId);
         Restaurant restaurant = optionalRestaurant.orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found with ID: " + restaurantId));
 
-        // Utilizando reflexão para atualizar as propriedades
+        // Using reflection to update the fields
         for (Field field : updatedRestaurant.getClass().getDeclaredFields()) {
-            if (!field.getName().equals("id")) { // Ignora o ID
+            if (!field.getName().equals("id")) { // Ignore ID
                 try {
                     field.setAccessible(true);
                     Object newValue = field.get(updatedRestaurant);
@@ -77,6 +77,25 @@ public class RestaurantServiceImp implements RestaurantService {
                 }
             }
         }
+//        Restaurant restaurant = findRestaurantById(restaurantId);
+//        if(restaurant.getCuisineType() != null) {
+//            restaurant.setCuisineType(updatedRestaurant.getCuisineType());
+//        }
+//        if(restaurant.getDescription() != null) {
+//            restaurant.setDescription(updatedRestaurant.getDescription());
+//        }
+//        if(restaurant.getContactInformation() != null) {
+//            restaurant.setContactInformation(updatedRestaurant.getContactInformation());
+//        }
+//        if(restaurant.getOpeningHours() != null) {
+//            restaurant.setOpeningHours(updatedRestaurant.getOpeningHours());
+//        }
+//        if(restaurant.getImages() != null) {
+//            restaurant.setImages(updatedRestaurant.getImages());
+//        }
+//        if(restaurant.getRestaurantName() != null) {
+//            restaurant.setRestaurantName(updatedRestaurant.getRestaurantName());
+//        }
 
         return restaurantRepository.save(restaurant);
     }
@@ -95,6 +114,12 @@ public class RestaurantServiceImp implements RestaurantService {
 
         Optional<Restaurant> optionalRestaurant = restaurantRepository.findById(restaurantId);
         Restaurant restaurant = optionalRestaurant.orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found with ID: " + restaurantId));
+
+//        Restaurant restaurant = findRestaurantById(restaurantId);
+//
+//        if (restaurant == null) {
+//            throw new RestaurantNotFoundException("Restaurant not found with ID: " + restaurantId);
+//        }
 
         restaurantRepository.delete(restaurant);
     }
@@ -122,19 +147,10 @@ public class RestaurantServiceImp implements RestaurantService {
     }
 
     @Override
-    public Restaurant getRestaurantById(Long id) throws Exception {
-        return null;
+    public Optional<Restaurant> getRestaurantsByUserId(Long userId) {
+        return restaurantRepository.findByOwnerId(userId);
     }
 
-    @Override
-    public List<Restaurant> getRestaurantsByUserId(Long userId) throws Exception {
-
-        Restaurant restaurant = restaurantRepository.findByOwnerId(userId);
-        if (restaurant == null) return new ArrayList<>();
-        List<Restaurant> restaurants = new ArrayList<>();
-        restaurants.add(restaurant);
-        return restaurants;
-    }
 
     @Override
     public List<Restaurant> getRestaurantsByCategory(String category) throws Exception {
@@ -167,10 +183,27 @@ public class RestaurantServiceImp implements RestaurantService {
         restaurantDto.setImages(restaurant.getImages());
         restaurantDto.setId(restaurantId);
 
-        if(user.getFavorites().contains(restaurantDto)) {
-            user.getFavorites().remove(restaurantDto);
+        if(user.getFavoriteRestaurants().contains(restaurantDto)) {
+            user.getFavoriteRestaurants().remove(restaurantDto);
         }
-        else user.getFavorites().add(restaurantDto);
+        else user.getFavoriteRestaurants().add(restaurantDto);
+
+//        ## Another approach instead of the if statement above that required
+//        to override the equals and hashCode methods:
+
+//        boolean isFavorited = false;
+//        List<RestaurantDto> favoriteRestaurants = user.getFavoriteRestaurants();
+//        for (RestaurantDto favoriteRestaurant : favoriteRestaurants) {
+//            if (favoriteRestaurant.getId().equals(restaurantId)) {
+//                isFavorited = true;
+//                break;
+//            }
+//        }
+//        if (isFavorited) {
+//            favoriteRestaurants.removeIf(favoriteRestaurant -> favoriteRestaurant.getId().equals(restaurantId));
+//        } else {
+//            favoriteRestaurants.add(restaurantDto);
+//        }
 
         userRepository.save(user);
         return restaurantDto;

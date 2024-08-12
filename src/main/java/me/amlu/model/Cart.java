@@ -22,7 +22,7 @@ public class Cart {
     @OneToOne
     private User customer;
 
-    private BigDecimal totalPrice;
+    private BigDecimal totalAmount;
 
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<CartItem> cartItems = new ArrayList<>(); //<Food, Quantity>

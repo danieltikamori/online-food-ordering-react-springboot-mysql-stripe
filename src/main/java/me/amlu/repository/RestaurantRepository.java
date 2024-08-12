@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
 
@@ -12,7 +13,8 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
             " OR LOWER(r.cuisineType) LIKE LOWER(CONCAT('%', :searchQuery, '%'))")
     List<Restaurant> findBySearchQuery(String searchQuery);
 
-    Restaurant findByOwnerId(Long userId);
+    Optional<Restaurant> findByOwnerId(Long userId);  // Updated method signature
+
 
 
 }
