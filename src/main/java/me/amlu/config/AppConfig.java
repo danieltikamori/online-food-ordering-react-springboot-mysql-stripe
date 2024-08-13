@@ -1,5 +1,9 @@
 package me.amlu.config;
 
+import me.amlu.repository.OrderRepository;
+import me.amlu.repository.UserRepository;
+import me.amlu.service.*;
+import me.amlu.service.Tasks.RecordCleanupTask;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -22,6 +26,9 @@ import java.util.List;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class AppConfig {
+
+    // Cross-Site Request Forgery
+    // CSRF protection disabled for testing purposes
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -60,5 +67,25 @@ public class AppConfig {
     @Bean
     PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public NotificationService notificationService() {
+        return new NotificationServiceImp();
+    }
+
+    @Bean
+    public DataRetentionPolicyImp dataRetentionPolicy(UserRepository userRepository, OrderRepository orderRepository) {
+        return new DataRetentionPolicyImp(userRepository, orderRepository);
+    }
+
+    @Bean
+    public RecordCleanupTask recordCleanUpTask(UserRepository userRepository, OrderRepository orderRepository) {
+        return new RecordCleanupTask(userRepository, orderRepository, dataRetentionPolicy(userRepository, orderRepository));
+    }
+
+    @Bean
+    public DataTransferServiceImp dataTransferServiceImp(AnonymizationService anonymizationService, NotificationService notificationService, DataTransferService dataTransferService, DataRetentionPolicy dataRetentionPolicy) {
+        return new DataTransferServiceImp(anonymizationService, notificationService, dataTransferService, dataRetentionPolicy);
     }
 }

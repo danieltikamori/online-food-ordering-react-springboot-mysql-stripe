@@ -7,6 +7,7 @@ import lombok.*;
 import me.amlu.dto.RestaurantDto;
 import org.hibernate.proxy.HibernateProxy;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -26,6 +27,8 @@ public class User {
     private String fullName;
 
     private String email;
+
+    private Instant deletedAt;
 
     // To avoid password leakage, we will use the JsonProperty annotation as write-only.
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)

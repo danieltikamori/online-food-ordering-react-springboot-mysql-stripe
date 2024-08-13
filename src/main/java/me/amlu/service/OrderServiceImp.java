@@ -6,6 +6,7 @@ import me.amlu.request.OrderRequest;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -143,10 +144,11 @@ public class OrderServiceImp implements OrderService {
     }
 
     @Override
-    public void deleteOrder(Long orderId) throws Exception {
-
-        Order order = findOrderById(orderId);
-        orderRepository.deleteById(orderId);
-
+    public void deleteOrder(Long orderId) throws OrderNotFoundException {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found."));
+        order.setDeletedAt(Instant.now());
+        orderRepository.save(order);
     }
+
 }

@@ -6,6 +6,7 @@ import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -35,6 +36,8 @@ public class Order {
     private Date createdAt;
 
     private Date updatedAt;
+
+    private Instant deletedAt;
 
     @ManyToOne
     private Address deliveryAddress;

@@ -10,4 +10,6 @@ public interface UserService extends UserDetailsService {
     public User findUserByJwtToken(String token) throws UserNotFoundException;
 
     public User findUserByEmail(String email) throws UserNotFoundException;
+
+    void deleteUser(Long userId) throws UserNotFoundException;
 }
