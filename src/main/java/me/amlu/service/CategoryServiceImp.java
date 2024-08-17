@@ -38,10 +38,12 @@ public class CategoryServiceImp implements CategoryService {
     }
 
     @Override
-    public List<Category> findCategoryByRestaurantId(Long userId) throws Exception {
+    public List<Category> findCategoryByRestaurantId(Long id) throws Exception {
 
-        Optional<Restaurant> restaurant = restaurantService.getRestaurantsByUserId(userId);
-        return categoryRepository.findCategoryByRestaurantId(restaurant.map(Restaurant::getId).orElse(null));
+//        Optional<Restaurant> restaurant = restaurantService.getRestaurantsByUserId(userId);
+//        return categoryRepository.findCategoryByRestaurantId(restaurant.map(Restaurant::getId).orElse(null));
+                Optional<Restaurant> restaurant = restaurantService.getRestaurantsByUserId(id);
+        return categoryRepository.findByRestaurantId(id);
 
     }
 

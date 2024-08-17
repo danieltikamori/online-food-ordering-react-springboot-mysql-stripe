@@ -17,4 +17,6 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 
     @Query("SELECT c FROM Category c WHERE LOWER(c.categoryName) = LOWER(:categoryName)")
     Category findSimilarCategory(@Param("categoryName") String categoryName);
+
+    List<Category> findByRestaurantId(Long id);
 }
