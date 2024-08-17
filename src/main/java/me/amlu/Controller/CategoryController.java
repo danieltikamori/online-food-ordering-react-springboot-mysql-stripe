@@ -3,7 +3,6 @@ package me.amlu.Controller;
 import me.amlu.model.Category;
 import me.amlu.model.User;
 import me.amlu.service.CategoryService;
-import me.amlu.service.DuplicateCategoryException;
 import me.amlu.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,13 +28,26 @@ public class CategoryController {
                                                    @RequestHeader("Authorization") String token) throws Exception {
         User user = userService.findUserByJwtToken(token);
         Category existingCategory = categoryService.findCategoryByName(category.getCategoryName());
-        if (existingCategory != null && existingCategory.hasSameCategoryName(category)) {
-            // You could throw an exception or return an error message here
-            throw new DuplicateCategoryException("Category with name '" + category.getCategoryName() + "' already exists.");
-        }
-        Category createdCategory = categoryService.createCategory(category.getCategoryName(), user.getId());
 
-        return new ResponseEntity<>(createdCategory, HttpStatus.CREATED);
+        if (existingCategory != null) {
+            // If an existing category is found, return a response with the existing category and a message
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(existingCategory);
+        } else {
+            // If no existing category is found, try to find a similar category (e.g. with a different case)
+            Category similarCategory = categoryService.findSimilarCategory(category.getCategoryName());
+
+            if (similarCategory != null) {
+                // If a similar category is found, return a response with the similar category and a message
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body(similarCategory);
+            } else {
+                // If no similar category is found, create a new category
+                Category createdCategory = categoryService.createCategory(category.getCategoryName(), user.getId());
+                return ResponseEntity.status(HttpStatus.CREATED)
+                        .body(createdCategory);
+            }
+        }
     }
 
 

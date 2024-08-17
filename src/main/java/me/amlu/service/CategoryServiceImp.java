@@ -63,6 +63,11 @@ public class CategoryServiceImp implements CategoryService {
     }
 
     @Override
+    public Category findSimilarCategory(String categoryName) {
+        return categoryRepository.findSimilarCategory(categoryName);
+    }
+
+    @Override
     public Category updateCategory(Long categoryId, String categoryName, Long userId) throws Exception {
 
         Category category = findCategoryById(categoryId);

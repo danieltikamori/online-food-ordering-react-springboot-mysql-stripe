@@ -14,6 +14,8 @@ public interface CategoryService {
 
     public Category findCategoryByName(String categoryName) throws Exception;
 
+    Category findSimilarCategory(String categoryName);
+
     public Category updateCategory(Long categoryId, String categoryName, Long userId) throws Exception;
 
     public void deleteCategory(Long categoryId) throws Exception;
