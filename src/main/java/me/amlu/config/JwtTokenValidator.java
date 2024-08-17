@@ -1,6 +1,7 @@
 package me.amlu.config;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import jakarta.servlet.FilterChain;
@@ -28,6 +29,12 @@ public class JwtTokenValidator extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(@NonNull HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull FilterChain filterChain) throws ServletException, IOException {
+
+        // Check if the response has already been committed
+        if (response.isCommitted()) {
+            // The response has already been committed, do not send any response
+            return;
+        }
 
         String jwt = request.getHeader(JwtConstant.JWT_HEADER);
 
