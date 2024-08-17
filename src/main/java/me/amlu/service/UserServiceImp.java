@@ -3,6 +3,7 @@ package me.amlu.service;
 import me.amlu.config.JwtProvider;
 import me.amlu.model.User;
 import me.amlu.repository.UserRepository;
+import me.amlu.service.Exceptions.UserNotFoundException;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;

@@ -1,6 +1,7 @@
 package me.amlu.service;
 
 import me.amlu.model.User;
+import me.amlu.service.Exceptions.UserNotFoundException;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 

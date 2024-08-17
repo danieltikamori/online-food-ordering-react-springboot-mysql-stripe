@@ -5,6 +5,7 @@ import me.amlu.model.Food;
 import me.amlu.model.Restaurant;
 import me.amlu.repository.FoodRepository;
 import me.amlu.request.CreateFoodRequest;
+import me.amlu.service.Exceptions.FoodNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

@@ -3,6 +3,7 @@ package me.amlu.service;
 import me.amlu.model.*;
 import me.amlu.repository.*;
 import me.amlu.request.OrderRequest;
+import me.amlu.service.Exceptions.OrderStatusNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;

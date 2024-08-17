@@ -1,4 +1,4 @@
-package me.amlu.service;
+package me.amlu.service.Exceptions;
 
 public class CartNotFoundException extends Exception {
     public CartNotFoundException(String message) {

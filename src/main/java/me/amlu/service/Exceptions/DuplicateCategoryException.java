@@ -1,4 +1,4 @@
-package me.amlu.service;
+package me.amlu.service.Exceptions;
 
 public class DuplicateCategoryException extends Exception{
 

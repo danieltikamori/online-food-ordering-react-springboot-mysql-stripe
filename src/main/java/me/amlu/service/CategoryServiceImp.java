@@ -3,6 +3,8 @@ package me.amlu.service;
 import me.amlu.model.Category;
 import me.amlu.model.Restaurant;
 import me.amlu.repository.CategoryRepository;
+import me.amlu.service.Exceptions.CategoryNotFoundException;
+import me.amlu.service.Exceptions.DuplicateCategoryException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

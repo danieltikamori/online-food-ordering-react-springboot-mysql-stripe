@@ -5,6 +5,8 @@ import me.amlu.model.IngredientsItems;
 import me.amlu.model.Restaurant;
 import me.amlu.repository.IngredientCategoryRepository;
 import me.amlu.repository.IngredientsItemsRepository;
+import me.amlu.service.Exceptions.IngredientCategoryNotFoundException;
+import me.amlu.service.Exceptions.IngredientsItemsNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;

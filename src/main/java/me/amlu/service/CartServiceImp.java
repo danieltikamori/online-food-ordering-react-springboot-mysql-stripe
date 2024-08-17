@@ -7,6 +7,8 @@ import me.amlu.model.User;
 import me.amlu.repository.CartItemRepository;
 import me.amlu.repository.CartRepository;
 import me.amlu.request.AddCartItemRequest;
+import me.amlu.service.Exceptions.CartItemNotFoundException;
+import me.amlu.service.Exceptions.CartNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;

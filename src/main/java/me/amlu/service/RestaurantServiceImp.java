@@ -8,6 +8,7 @@ import me.amlu.repository.AddressRepository;
 import me.amlu.repository.RestaurantRepository;
 import me.amlu.repository.UserRepository;
 import me.amlu.request.CreateRestaurantRequest;
+import me.amlu.service.Exceptions.RestaurantNotFoundException;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
