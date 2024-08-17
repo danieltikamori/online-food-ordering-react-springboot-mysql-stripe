@@ -22,7 +22,11 @@ public class CategoryServiceImp implements CategoryService {
 
     @Override
     public Category createCategory(String categoryName, Long userId) throws Exception {
-
+        Category existingCategory = categoryRepository.findByCategoryName(categoryName);
+        if (existingCategory != null) {
+            // You could throw an exception or return an error message here
+            throw new DuplicateCategoryException("Category with name '" + categoryName + "' already exists");
+        }
         Optional<Restaurant> restaurant = restaurantService.getRestaurantsByUserId(userId);
         Category category = new Category();
         category.setCategoryName(categoryName);
@@ -46,6 +50,24 @@ public class CategoryServiceImp implements CategoryService {
         throw new CategoryNotFoundException("Category not found.");
         }
             return optionalCategory.get();
+    }
+
+    @Override
+    public Category findCategoryByName(String categoryName) throws Exception {
+
+        Optional<Category> optionalCategory = Optional.ofNullable(categoryRepository.findByCategoryName(categoryName));
+        if (optionalCategory.isEmpty()) {
+            throw new CategoryNotFoundException("Category not found.");
+        }
+        return optionalCategory.get();
+    }
+
+    @Override
+    public Category updateCategory(Long categoryId, String categoryName, Long userId) throws Exception {
+
+        Category category = findCategoryById(categoryId);
+        category.setCategoryName(categoryName);
+        return categoryRepository.save(category);
     }
 
     @Override

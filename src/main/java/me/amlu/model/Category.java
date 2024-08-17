@@ -19,12 +19,16 @@ public class Category {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    @Column(unique = true, nullable = false)
     private String categoryName;
 
     @JsonIgnore
     @ManyToOne
     private Restaurant restaurant;
 
+    public boolean hasSameCategoryName(Category other) {
+        return categoryName.equalsIgnoreCase(other.categoryName);
+    }
     @Override
     public final boolean equals(Object o) {
         if (this == o) return true;

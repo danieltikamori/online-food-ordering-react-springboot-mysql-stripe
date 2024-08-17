@@ -3,6 +3,7 @@ package me.amlu.Controller;
 import me.amlu.model.Category;
 import me.amlu.model.User;
 import me.amlu.service.CategoryService;
+import me.amlu.service.DuplicateCategoryException;
 import me.amlu.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +28,11 @@ public class CategoryController {
     public ResponseEntity<Category> createCategory(@RequestBody Category category,
                                                    @RequestHeader("Authorization") String token) throws Exception {
         User user = userService.findUserByJwtToken(token);
+        Category existingCategory = categoryService.findCategoryByName(category.getCategoryName());
+        if (existingCategory != null && existingCategory.hasSameCategoryName(category)) {
+            // You could throw an exception or return an error message here
+            throw new DuplicateCategoryException("Category with name '" + category.getCategoryName() + "' already exists.");
+        }
         Category createdCategory = categoryService.createCategory(category.getCategoryName(), user.getId());
 
         return new ResponseEntity<>(createdCategory, HttpStatus.CREATED);

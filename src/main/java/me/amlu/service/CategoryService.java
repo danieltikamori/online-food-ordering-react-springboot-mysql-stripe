@@ -12,6 +12,10 @@ public interface CategoryService {
 
     public Category findCategoryById(Long categoryId) throws Exception;
 
+    public Category findCategoryByName(String categoryName) throws Exception;
+
+    public Category updateCategory(Long categoryId, String categoryName, Long userId) throws Exception;
+
     public void deleteCategory(Long categoryId) throws Exception;
 
 }
