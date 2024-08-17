@@ -14,6 +14,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -46,6 +47,22 @@ public class AppConfig {
         return http.build();
     }
 
+    // Separate security configuration for the /auth endpoint,
+    // which allows customizing the security settings for this endpoint specifically.
+    @Bean
+    SecurityFilterChain authSecurityFilterChain(HttpSecurity http) throws Exception {
+        http.sessionManagement(management -> management.sessionCreationPolicy(
+                        SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(
+                        Authorize -> Authorize
+                                .requestMatchers("/auth/signup").permitAll()
+                                .anyRequest().authenticated()
+                ).addFilterBefore(new JwtTokenValidator(), BasicAuthenticationFilter.class)
+                .csrf(AbstractHttpConfigurer::disable)
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()));
+        return http.build();
+    }
+
     private CorsConfigurationSource corsConfigurationSource() {
         return request -> {
             CorsConfiguration corsConfiguration = new CorsConfiguration();
@@ -70,6 +87,15 @@ public class AppConfig {
     }
 
     @Bean
+    public JwtTokenValidator jwtTokenValidator() {
+        return new JwtTokenValidator();
+    }
+
+    protected void configure(HttpSecurity http) throws Exception {
+        http.addFilterBefore(jwtTokenValidator(), UsernamePasswordAuthenticationFilter.class);
+    }
+
+    @Bean
     public NotificationService notificationService() {
         return new NotificationServiceImp();
     }
@@ -85,7 +111,7 @@ public class AppConfig {
     }
 
     @Bean
-    public DataTransferServiceImp dataTransferServiceImp(AnonymizationService anonymizationService, NotificationService notificationService, DataTransferService dataTransferService, DataRetentionPolicy dataRetentionPolicy) {
-        return new DataTransferServiceImp(anonymizationService, notificationService, dataTransferService, dataRetentionPolicy);
+    public DataTransferServiceImp dataTransferServiceImp(AnonymizationService anonymizationService, NotificationService notificationService, DataRetentionPolicy dataRetentionPolicy) {
+        return new DataTransferServiceImp(anonymizationService, notificationService, dataRetentionPolicy);
     }
 }
