@@ -11,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+
 @RestController
 @RequestMapping("/api")
 public class CartController {
@@ -26,7 +28,7 @@ public class CartController {
 
 
     @PutMapping("/cart/add")
-    public ResponseEntity<CartItem> addItemToCart(@RequestBody AddCartItemRequest request,
+    public ResponseEntity<CartItem> addItemToCart(@Valid @RequestBody AddCartItemRequest request,
                                            @RequestHeader("Authorization") String token) throws Exception {
         CartItem cartItem = cartService.addItemToCart(request, token);
 
@@ -35,7 +37,7 @@ public class CartController {
     }
 
     @PutMapping("/cart/update")
-    public ResponseEntity<CartItem> updateCartItemQuantity(@RequestBody UpdateCartItemRequest request,
+    public ResponseEntity<CartItem> updateCartItemQuantity(@Valid @RequestBody UpdateCartItemRequest request,
                                                            @RequestHeader("Authorization") String token) throws Exception {
         CartItem cartItem = cartService.updateCartItemQuantity(request.getCartItemId(), request.getQuantity());
 

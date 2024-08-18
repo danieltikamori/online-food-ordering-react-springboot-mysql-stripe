@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
 
+import javax.validation.constraints.Min;
 import java.util.Objects;
 
 @Entity
@@ -19,7 +20,8 @@ public class Category {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @Column(unique = true, nullable = false)
+    @Min(2)
+    @Column(unique = true, nullable = false, length = 50)
     private String categoryName;
 
     @JsonIgnore

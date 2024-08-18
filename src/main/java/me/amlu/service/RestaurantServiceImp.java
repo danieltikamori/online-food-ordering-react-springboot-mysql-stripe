@@ -1,5 +1,6 @@
 package me.amlu.service;
 
+import lombok.NonNull;
 import me.amlu.dto.RestaurantDto;
 import me.amlu.model.Address;
 import me.amlu.model.Restaurant;
@@ -32,7 +33,7 @@ public class RestaurantServiceImp implements RestaurantService {
     }
 
     @Override
-    public Restaurant createRestaurant(CreateRestaurantRequest restaurantRequest, User user) {
+    public Restaurant createRestaurant(@NonNull CreateRestaurantRequest restaurantRequest, User user) {
 
         try {
             Address address = addressRepository.save(restaurantRequest.getAddress());
@@ -60,7 +61,7 @@ public class RestaurantServiceImp implements RestaurantService {
 
     // RestaurantServiceImp.java
     @Override
-    public Restaurant updateRestaurant(Long restaurantId, CreateRestaurantRequest updatedRestaurant) throws Exception {
+    public Restaurant updateRestaurant(Long restaurantId, @NonNull CreateRestaurantRequest updatedRestaurant) throws Exception {
         Optional<Restaurant> optionalRestaurant = restaurantRepository.findById(restaurantId);
         Restaurant restaurant = optionalRestaurant.orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found with ID: " + restaurantId));
 

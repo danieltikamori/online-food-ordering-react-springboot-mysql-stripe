@@ -1,5 +1,6 @@
 package me.amlu.service;
 
+import lombok.NonNull;
 import me.amlu.model.Cart;
 import me.amlu.model.CartItem;
 import me.amlu.model.Food;
@@ -64,7 +65,7 @@ public class CartServiceImp implements CartService {
     }
 
     @Override
-    public CartItem updateCartItemQuantity(Long cartItemId, int quantity) throws Exception {
+    public CartItem updateCartItemQuantity(@NonNull Long cartItemId, int quantity) throws Exception {
         Optional<CartItem> cartItemOptional = cartItemRepository.findById(cartItemId);
         if (cartItemOptional.isEmpty()) {
             throw new CartItemNotFoundException("Cart item not found.");
@@ -76,7 +77,7 @@ public class CartServiceImp implements CartService {
     }
 
     @Override
-    public Cart removeCartItem(Long cartItemId, String token) throws Exception {
+    public Cart removeCartItem(@NonNull Long cartItemId, String token) throws Exception {
 
         User user = userService.findUserByJwtToken(token);
 
@@ -123,7 +124,7 @@ public class CartServiceImp implements CartService {
     }
 
     @Override
-    public Cart clearCart(Long customerId) throws Exception {
+    public Cart clearCart(@NonNull Long customerId) throws Exception {
 
 //        User user = userService.findUserByJwtToken(token);
          Cart cart = findCartByCustomerId(customerId);

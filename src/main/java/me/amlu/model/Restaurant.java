@@ -25,9 +25,13 @@ public class Restaurant {
     @OneToOne
     private User owner;
 
+    @Column(unique = true, nullable = false, length = 200)
     private String restaurantName;
 
+    @Column(length = 2000)
     private String description;
+
+    @Column(length = 50)
     private String cuisineType;
 
     @OneToOne
@@ -36,6 +40,7 @@ public class Restaurant {
     @Embedded
     private ContactInformation contactInformation;
 
+    @Column(length = 200)
     private String openingHours;
 
     @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -43,7 +48,7 @@ public class Restaurant {
     private List<Order> orders = new ArrayList<>();
 
     @ElementCollection
-    @Column(length = 1000)
+    @Column(length = 10000)
     private List<String> images;
 
     private LocalDateTime registrationDate;

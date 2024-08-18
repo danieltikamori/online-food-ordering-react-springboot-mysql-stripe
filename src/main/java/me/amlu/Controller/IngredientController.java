@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -23,16 +24,16 @@ public class IngredientController {
 
     @PostMapping("/category")
     public ResponseEntity<IngredientCategory> createIngredientCategory(
-            @RequestBody IngredientCategoryRequest request
+            @Valid @RequestBody IngredientCategoryRequest request
             ) throws Exception {
 
         IngredientCategory category = ingredientsService.createIngredientCategory(request.getCategoryName(), request.getRestaurantId());
 
         return new ResponseEntity<>(category, HttpStatus.CREATED);
     }
-    @PostMapping()
+    @PostMapping("/items")
     public ResponseEntity<IngredientsItems> createIngredientsItems(
-            @RequestBody IngredientRequest request
+            @Valid @RequestBody IngredientRequest request
     ) throws Exception {
 
         IngredientsItems item = ingredientsService.createIngredientsItems(request.getRestaurantId(), request.getItemName(), request.getCategoryId());
@@ -52,7 +53,7 @@ public class IngredientController {
     @PutMapping("/category/{id}")
     public ResponseEntity<IngredientCategory> updateIngredientCategory(
             @PathVariable Long id,
-            @RequestBody String name
+            @Valid @RequestBody String name
     ) throws Exception {
         IngredientCategory category = ingredientsService.updateIngredientCategory(id, name);
         return new ResponseEntity<>(category, HttpStatus.OK);

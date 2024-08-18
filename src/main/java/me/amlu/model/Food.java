@@ -23,8 +23,10 @@ public class Food {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    @Column(unique = true, nullable = false, length = 500)
     private String name;
 
+    @Column(length = 2000)
     private String description;
 
     @ManyToOne
@@ -32,7 +34,7 @@ public class Food {
 
     private BigDecimal price;
 
-    @Column(length = 1000)
+    @Column(length = 10000)
     @ElementCollection
     private List<String> images;
 
@@ -45,7 +47,7 @@ public class Food {
     private boolean isSeasonal;
 
     @ManyToMany
-    @ToString.Exclude
+    @Column(length = 10000)
     private List<IngredientsItems> ingredients = new ArrayList<>();
 
 

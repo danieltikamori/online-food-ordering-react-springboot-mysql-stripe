@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
 
+import javax.validation.constraints.Max;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
@@ -23,6 +24,8 @@ public class OrderItem {
     @ManyToOne
     private Food food;
 
+    @Max(5000)
+    @Column(nullable = false)
     private int quantity;
 
     private BigDecimal totalAmount;
@@ -30,7 +33,8 @@ public class OrderItem {
     @ManyToOne
     private Order order;
 
-//    @ElementCollection
+    @ElementCollection
+    @Column(length = 2000)
     private List<String> ingredients;
 
     @Override

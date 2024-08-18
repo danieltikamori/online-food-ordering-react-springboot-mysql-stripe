@@ -1,10 +1,12 @@
 package me.amlu.service;
 
+import lombok.NonNull;
 import me.amlu.model.IngredientCategory;
 import me.amlu.model.IngredientsItems;
 import me.amlu.model.Restaurant;
 import me.amlu.repository.IngredientCategoryRepository;
 import me.amlu.repository.IngredientsItemsRepository;
+import me.amlu.service.Exceptions.DuplicateCategoryException;
 import me.amlu.service.Exceptions.IngredientCategoryNotFoundException;
 import me.amlu.service.Exceptions.IngredientsItemsNotFoundException;
 import org.springframework.stereotype.Service;
@@ -15,26 +17,39 @@ import java.util.Optional;
 @Service
 public class IngredientServiceImp implements IngredientsService {
 
+    private final EntityUniquenessService uniquenessService;
+
     private final IngredientsItemsRepository ingredientsItemsRepository;
 
     private final IngredientCategoryRepository ingredientCategoryRepository;
 
     private final RestaurantService restaurantService;
 
-    public IngredientServiceImp(IngredientsItemsRepository ingredientsItemsRepository, IngredientCategoryRepository ingredientCategoryRepository, RestaurantService restaurantService) {
+    public IngredientServiceImp(EntityUniquenessService uniquenessService, IngredientsItemsRepository ingredientsItemsRepository, IngredientCategoryRepository ingredientCategoryRepository, RestaurantService restaurantService) {
+        this.uniquenessService = uniquenessService;
         this.ingredientsItemsRepository = ingredientsItemsRepository;
         this.ingredientCategoryRepository = ingredientCategoryRepository;
         this.restaurantService = restaurantService;
     }
 
     @Override
-    public IngredientCategory createIngredientCategory(String name, Long restaurantId) throws Exception {
+    public IngredientCategory createIngredientCategory(@NonNull String categoryName, @NonNull Long restaurantId) throws Exception {
 
         Restaurant restaurant = restaurantService.findRestaurantById(restaurantId);
 
+        // Check if a category with the same name already exists for this restaurant
+//        Optional<IngredientCategory> existingCategory = ingredientCategoryRepository.findByCategoryNameAndRestaurantId(name, restaurantId);
+//        if (existingCategory.isPresent()) {
+//            throw new DuplicateCategoryException("Category with name '" + name + "' already exists for this restaurant.");
+//        }
+        if (uniquenessService.isEntityUnique(new IngredientCategory(), "categoryName", "restaurant")) {
+            throw new DuplicateCategoryException("Ingredient category name '" + categoryName + "' already exists");
+        }
+
         IngredientCategory ingredientCategory = new IngredientCategory();
-        ingredientCategory.setCategoryName(name);
+        ingredientCategory.setCategoryName(categoryName);
         ingredientCategory.setRestaurant(restaurant);
+
 
         return ingredientCategoryRepository.save(ingredientCategory);
 
@@ -61,10 +76,15 @@ public class IngredientServiceImp implements IngredientsService {
     }
 
     @Override
-    public IngredientsItems createIngredientsItems(Long restaurantId, String ingredientName, Long ingredientCategoryId) throws Exception {
+    public IngredientsItems createIngredientsItems(@NonNull Long restaurantId, @NonNull String ingredientName, @NonNull Long ingredientCategoryId) throws Exception {
 
         Restaurant restaurant = restaurantService.findRestaurantById(restaurantId);
         IngredientCategory ingredientCategory = findIngredientCategoryById(ingredientCategoryId);
+
+        if (uniquenessService.isEntityUnique(new IngredientsItems(), "ingredientName", "ingredientCategory", "restaurant")) {
+            throw new DuplicateCategoryException("Ingredient item with name '" + ingredientName +
+                    "' already exists in this category.");
+        }
 
         IngredientsItems ingredientsItems = new IngredientsItems();
         ingredientsItems.setIngredientName(ingredientName);
@@ -84,7 +104,7 @@ public class IngredientServiceImp implements IngredientsService {
     }
 
     @Override
-    public IngredientsItems updateStock(Long id) throws Exception {
+    public IngredientsItems updateStock(@NonNull Long id) throws Exception {
 
         Optional<IngredientsItems> optionalIngredientsItems = ingredientsItemsRepository.findById(id);
         if (optionalIngredientsItems.isEmpty()) {
@@ -96,7 +116,7 @@ public class IngredientServiceImp implements IngredientsService {
     }
 
     @Override
-    public IngredientCategory updateIngredientCategory(Long id, String name) throws Exception {
+    public IngredientCategory updateIngredientCategory(@NonNull Long id, @NonNull String name) throws Exception {
         return null;
     }
 

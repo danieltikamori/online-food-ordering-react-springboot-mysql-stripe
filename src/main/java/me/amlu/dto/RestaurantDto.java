@@ -1,7 +1,6 @@
 package me.amlu.dto;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
 import lombok.Data;
 
@@ -12,12 +11,15 @@ import java.util.Objects;
 @Embeddable
 public class RestaurantDto {
 
+    @Column(length = 200)
     private String title;
 
-    @Column(length = 1000)
+    @Column(length = 10000)
     private List<String> images;
 
+    @Column(length = 2000)
     private String description;
+
     private Long id;
 
 

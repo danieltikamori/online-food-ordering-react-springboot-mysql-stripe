@@ -12,7 +12,7 @@ import java.util.Objects;
 @Entity
 @Getter
 @Setter
-@ToString
+//@ToString
 @RequiredArgsConstructor
 @AllArgsConstructor
 public class IngredientCategory {
@@ -21,14 +21,16 @@ public class IngredientCategory {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    @Column(unique = true, nullable = false, length = 80)
     private String categoryName;
 
     @JsonIgnore
     @ManyToOne
     private Restaurant restaurant;
 
+    @JsonIgnore
+    @Column(nullable = false, length = 1000)
     @OneToMany(mappedBy = "ingredientCategory", cascade = CascadeType.ALL, orphanRemoval = true)
-    @ToString.Exclude
     private List<IngredientsItems> ingredients = new ArrayList<>();
 
 

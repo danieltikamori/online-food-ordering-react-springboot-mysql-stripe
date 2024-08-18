@@ -5,6 +5,7 @@ import me.amlu.model.Food;
 import me.amlu.model.Restaurant;
 import me.amlu.repository.FoodRepository;
 import me.amlu.request.CreateFoodRequest;
+import me.amlu.service.Exceptions.DuplicateCategoryException;
 import me.amlu.service.Exceptions.FoodNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -15,15 +16,24 @@ import java.util.stream.Collectors;
 @Service
 public class FoodServiceImp implements FoodService {
 
+    private final EntityUniquenessService uniquenessService;
+
     private final FoodRepository foodRepository;
 
 
-    public FoodServiceImp(FoodRepository foodRepository) {
+    public FoodServiceImp(EntityUniquenessService uniquenessService, FoodRepository foodRepository) {
+        this.uniquenessService = uniquenessService;
         this.foodRepository = foodRepository;
     }
 
     @Override
-    public Food createFood(CreateFoodRequest createFoodRequest, Category category, Restaurant restaurant) {
+    public Food createFood(CreateFoodRequest createFoodRequest, Category category, Restaurant restaurant) throws Exception {
+
+        if (uniquenessService.isEntityUnique(new Food(), "name", "restaurant", "foodCategory")) {
+            throw new DuplicateCategoryException("Food item with name '" + createFoodRequest.getName() +
+                    "' already exists in this category and restaurant.");
+        }
+
         Food food = new Food();
         food.setFoodCategory(category);
         food.setRestaurant(restaurant);

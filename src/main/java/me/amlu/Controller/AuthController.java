@@ -20,6 +20,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.Collection;
 
 @RestController
@@ -42,7 +43,7 @@ public class AuthController {
     }
 
 @PostMapping("/signup")
-    public ResponseEntity<AuthResponse> createUserHandler(@RequestBody User user) {
+    public ResponseEntity<AuthResponse> createUserHandler(@Valid @RequestBody User user) {
 
        User isEmailExist = userRepository.findByEmail(user.getEmail());
        if(isEmailExist != null) {
@@ -79,7 +80,7 @@ public class AuthController {
 
 
     @PostMapping("/signin")
-    public ResponseEntity<AuthResponse> signin(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<AuthResponse> signin(@Valid @RequestBody LoginRequest loginRequest) {
 
         String username = loginRequest.getEmail();
         String password = loginRequest.getPassword();

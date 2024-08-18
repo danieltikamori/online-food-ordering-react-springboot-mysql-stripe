@@ -1,8 +1,10 @@
 package me.amlu.service;
 
+import lombok.NonNull;
 import me.amlu.model.*;
 import me.amlu.repository.*;
 import me.amlu.request.OrderRequest;
+import me.amlu.service.Exceptions.OrderNotFoundException;
 import me.amlu.service.Exceptions.OrderStatusNotFoundException;
 import org.springframework.stereotype.Service;
 
@@ -39,7 +41,7 @@ public class OrderServiceImp implements OrderService {
     }
 
     @Override
-    public Order createOrder(OrderRequest order, User user) throws Exception {
+    public Order createOrder(@NonNull OrderRequest order, User user) throws Exception {
 
         Address deliveryAddress = order.getDeliveryAddress();
         Address savedAddress = addressRepository.save(deliveryAddress);
@@ -89,14 +91,14 @@ public class OrderServiceImp implements OrderService {
     }
 
     @Override
-    public Order updateOrder(Long orderId, String orderStatus) throws Exception {
+    public Order updateOrder(@NonNull Long orderId, @NonNull String orderStatus) throws Exception {
 
         Order order = findOrderById(orderId);
-        if (orderStatus.equals("OUT_FOR_DELIVERY")
-                || (orderStatus.equals("DELIVERED"))
-                || (orderStatus.equals("COMPLETED"))
-                || (orderStatus.equals("PENDING"))
-                || (orderStatus.equals("CANCELLED"))) {
+        if ("OUT_FOR_DELIVERY".equals(orderStatus)
+                || ("DELIVERED".equals(orderStatus))
+                || ("COMPLETED".equals(orderStatus))
+                || ("PENDING".equals(orderStatus))
+                || ("CANCELLED".equals(orderStatus))) {
 
 
             order.setOrderStatus(orderStatus);
@@ -106,7 +108,7 @@ public class OrderServiceImp implements OrderService {
     }
 
     @Override
-    public void cancelOrder(Long orderId) throws Exception {
+    public void cancelOrder(@NonNull Long orderId) throws Exception {
 
         Order order = findOrderById(orderId);
 

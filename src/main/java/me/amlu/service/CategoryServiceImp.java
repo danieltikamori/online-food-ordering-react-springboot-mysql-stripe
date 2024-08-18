@@ -1,5 +1,6 @@
 package me.amlu.service;
 
+import lombok.NonNull;
 import me.amlu.model.Category;
 import me.amlu.model.Restaurant;
 import me.amlu.repository.CategoryRepository;
@@ -13,23 +14,35 @@ import java.util.Optional;
 @Service
 public class CategoryServiceImp implements CategoryService {
 
+    private final EntityUniquenessService uniquenessService;
+
     private final RestaurantService restaurantService;
 
     private final CategoryRepository categoryRepository;
 
-    public CategoryServiceImp(RestaurantService restaurantService, CategoryRepository categoryRepository) {
+    public CategoryServiceImp(EntityUniquenessService uniquenessService, RestaurantService restaurantService, CategoryRepository categoryRepository) {
+        this.uniquenessService = uniquenessService;
         this.restaurantService = restaurantService;
         this.categoryRepository = categoryRepository;
     }
 
     @Override
-    public Category createCategory(String categoryName, Long userId) throws Exception {
-        Category existingCategory = categoryRepository.findByCategoryName(categoryName);
-        if (existingCategory != null) {
-            // You could throw an exception or return an error message here
+    public Category createCategory(@NonNull String categoryName, Long userId) throws Exception {
+//        Category existingCategory = categoryRepository.findByCategoryName(categoryName);
+//
+//        if (existingCategory != null) {
+//            throw new DuplicateCategoryException("Category with name '" + categoryName + "' already exists");
+//        }
+
+
+        Optional<Restaurant> restaurant = restaurantService.getRestaurantsByUserId(userId);
+        System.out.println("categoryName: " + categoryName);
+        System.out.println("restaurant: " + restaurant);
+
+        if (uniquenessService.isEntityUnique(new Category(), "categoryName", "restaurant")) {
             throw new DuplicateCategoryException("Category with name '" + categoryName + "' already exists");
         }
-        Optional<Restaurant> restaurant = restaurantService.getRestaurantsByUserId(userId);
+
         Category category = new Category();
         category.setCategoryName(categoryName);
         category.setRestaurant(restaurant.orElse(null));
@@ -59,11 +72,14 @@ public class CategoryServiceImp implements CategoryService {
     @Override
     public Category findCategoryByName(String categoryName) throws Exception {
 
-        Optional<Category> optionalCategory = Optional.ofNullable(categoryRepository.findByCategoryName(categoryName));
-        if (optionalCategory.isEmpty()) {
-            throw new CategoryNotFoundException("Category not found.");
-        }
-        return optionalCategory.get();
+        return categoryRepository.findByCategoryName(categoryName);
+
+        //As this check may cause errors when checking for duplicate category names.
+//        Optional<Category> optionalCategory = Optional.ofNullable(categoryRepository.findByCategoryName(categoryName));
+//        if (optionalCategory.isEmpty()) {
+//            throw new CategoryNotFoundException("Category not found.");
+//        }
+//        return optionalCategory.get();
     }
 
     @Override
@@ -72,7 +88,7 @@ public class CategoryServiceImp implements CategoryService {
     }
 
     @Override
-    public Category updateCategory(Long categoryId, String categoryName, Long userId) throws Exception {
+    public Category updateCategory(Long categoryId, @NonNull String categoryName, Long userId) throws Exception {
 
         Category category = findCategoryById(categoryId);
         category.setCategoryName(categoryName);

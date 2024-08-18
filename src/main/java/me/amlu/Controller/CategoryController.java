@@ -8,7 +8,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -24,30 +26,28 @@ public class CategoryController {
     }
 
     @PostMapping("/admin/category")
-    public ResponseEntity<Category> createCategory(@RequestBody Category category,
+    public ResponseEntity<Category> createCategory(@Valid @RequestBody Category category,
                                                    @RequestHeader("Authorization") String token) throws Exception {
+        Optional<Category> categoryOptional = Optional.ofNullable(category);
+        Optional<String> tokenOptional = Optional.ofNullable(token);
+
+        if (categoryOptional.isEmpty() || tokenOptional.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                    .body(null);
+        }
         User user = userService.findUserByJwtToken(token);
-        Category existingCategory = categoryService.findCategoryByName(category.getCategoryName());
+        // Check if a category with the same name exists (ignoring case)
+        Category existingCategory = categoryService.findSimilarCategory(category.getCategoryName());
 
         if (existingCategory != null) {
-            // If an existing category is found, return a response with the existing category and a message
             return ResponseEntity.status(HttpStatus.CONFLICT)
                     .body(existingCategory);
-        } else {
-            // If no existing category is found, try to find a similar category (e.g. with a different case)
-            Category similarCategory = categoryService.findSimilarCategory(category.getCategoryName());
-
-            if (similarCategory != null) {
-                // If a similar category is found, return a response with the similar category and a message
-                return ResponseEntity.status(HttpStatus.CONFLICT)
-                        .body(similarCategory);
-            } else {
-                // If no similar category is found, create a new category
-                Category createdCategory = categoryService.createCategory(category.getCategoryName(), user.getId());
-                return ResponseEntity.status(HttpStatus.CREATED)
-                        .body(createdCategory);
-            }
         }
+
+        // If no existing category is found, create a new category
+        Category createdCategory = categoryService.createCategory(category.getCategoryName(), user.getId());
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(createdCategory);
     }
 
 

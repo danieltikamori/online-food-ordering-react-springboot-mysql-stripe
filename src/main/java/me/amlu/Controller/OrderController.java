@@ -9,6 +9,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @RestController
@@ -25,7 +26,7 @@ public class OrderController {
     }
 
     @PostMapping("/order")
-    public ResponseEntity<Order> createOrder(@RequestBody OrderRequest orderRequest,
+    public ResponseEntity<Order> createOrder(@Valid @RequestBody OrderRequest orderRequest,
             @RequestHeader("Authorization") String token) throws Exception {
 
         User user = userService.findUserByJwtToken(token);
@@ -37,7 +38,7 @@ public class OrderController {
     }
 
     @GetMapping("/order/user")
-    public ResponseEntity<List<Order>> getOrderHistory(@RequestBody OrderRequest orderRequest,
+    public ResponseEntity<List<Order>> getOrderHistory(@Valid @RequestBody OrderRequest orderRequest,
                                                        @RequestHeader("Authorization") String token) throws Exception {
 
         User user = userService.findUserByJwtToken(token);

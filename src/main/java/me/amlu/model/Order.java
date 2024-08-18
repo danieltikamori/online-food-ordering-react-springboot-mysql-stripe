@@ -10,6 +10,7 @@ import java.time.Instant;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import javax.validation.constraints.Max;
 
 @Getter
 @Entity
@@ -48,6 +49,7 @@ public class Order {
 
 //    private Payment payment;
 
+    @Max(5000)
     private int totalItems;
 
     private BigDecimal totalAmount;

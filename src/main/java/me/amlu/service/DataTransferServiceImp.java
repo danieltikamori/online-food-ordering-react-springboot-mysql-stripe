@@ -1,5 +1,6 @@
 package me.amlu.service;
 
+import lombok.NonNull;
 import me.amlu.model.User;
 import org.springframework.stereotype.Service;
 
@@ -28,7 +29,7 @@ public class DataTransferServiceImp implements DataTransferService {
     }
 
     @Override
-    public void exportData(User user) {
+    public void exportData(@NonNull User user) {
 
         // Export the data to a file
         try (FileOutputStream fos = new FileOutputStream("anonymized_data_" + user.getId() + ".txt")) {

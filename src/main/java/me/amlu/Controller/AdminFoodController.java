@@ -12,6 +12,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+
 @RestController
 @RequestMapping("/api/v1/admin/food")
 public class AdminFoodController {
@@ -29,7 +31,7 @@ public class AdminFoodController {
     }
 
     @PostMapping
-    public ResponseEntity<Food> createFood(@RequestBody CreateFoodRequest createFoodRequest,
+    public ResponseEntity<Food> createFood(@Valid @RequestBody CreateFoodRequest createFoodRequest,
                                            @RequestHeader("Authorization") String token) throws Exception {
         User user = userService.findUserByJwtToken(token);
         Restaurant restaurant = restaurantService.findRestaurantById(createFoodRequest.getRestaurantId());

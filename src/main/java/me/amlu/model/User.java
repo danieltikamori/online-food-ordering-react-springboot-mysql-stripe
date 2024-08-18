@@ -24,15 +24,17 @@ public class User {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    @Column(nullable = false, length = 200)
     private String fullName;
 
+    @Column(nullable = false, unique = true, length = 200)
     private String email;
 
     private Instant deletedAt;
 
     // To avoid password leakage, we will use the JsonProperty annotation as write-only.
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
-    @Column(nullable = false)
+    @Column(nullable = false, length = 256)
     private String password;
 
     private USER_ROLE role = USER_ROLE.ROLE_CUSTOMER;
@@ -47,6 +49,7 @@ public class User {
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
+    @Column(length = 5000)
     private List<Address> addresses = new ArrayList<>();
 
     @Override

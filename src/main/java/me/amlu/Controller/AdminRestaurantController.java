@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.Optional;
 
 @RestController
@@ -28,7 +29,7 @@ public class AdminRestaurantController {
 
     @PostMapping()
     public ResponseEntity<Restaurant> createRestaurant(
-            @RequestBody CreateRestaurantRequest restaurantRequest,
+            @Valid @RequestBody CreateRestaurantRequest restaurantRequest,
             @RequestHeader("Authorization") String token)
             throws UserNotFoundException {
         User user = userService.findUserByJwtToken(token);
@@ -42,7 +43,7 @@ public class AdminRestaurantController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Restaurant> updateRestaurant(
-            @RequestBody CreateRestaurantRequest restaurantRequest,
+            @Valid @RequestBody CreateRestaurantRequest restaurantRequest,
             @RequestHeader("Authorization") String token,
             @PathVariable Long id)
             throws Exception {

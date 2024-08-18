@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.proxy.HibernateProxy;
 
+import javax.validation.constraints.Max;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Objects;
@@ -28,9 +29,11 @@ public class CartItem {
     @ManyToOne
     private Food food;
 
+    @Max(5000)
+    @Column(nullable = false)
     private int quantity;
 
-//    @ElementCollection
+    @ElementCollection
     private List<String> ingredients;
 
     private BigDecimal totalAmount;
