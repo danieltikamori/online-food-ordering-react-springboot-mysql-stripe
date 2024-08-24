@@ -1,4 +1,4 @@
-package me.amlu.Controller;
+package me.amlu.controller;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

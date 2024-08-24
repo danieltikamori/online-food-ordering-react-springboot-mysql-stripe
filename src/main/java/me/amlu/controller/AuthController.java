@@ -1,4 +1,4 @@
-package me.amlu.Controller;
+package me.amlu.controller;
 
 import me.amlu.model.Cart;
 import me.amlu.model.USER_ROLE;

@@ -1,4 +1,4 @@
-package me.amlu.Controller;
+package me.amlu.controller;
 
 import me.amlu.dto.RestaurantDto;
 import me.amlu.model.Restaurant;
