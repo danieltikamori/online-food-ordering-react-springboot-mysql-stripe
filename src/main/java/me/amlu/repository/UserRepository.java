@@ -17,5 +17,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     
     void deleteAllByDeletedAtBefore(Instant threshold);
 
+    boolean existsByEmail(String email);
 
 }

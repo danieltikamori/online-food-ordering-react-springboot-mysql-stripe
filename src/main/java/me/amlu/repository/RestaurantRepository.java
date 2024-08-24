@@ -16,5 +16,6 @@ public interface RestaurantRepository extends JpaRepository<Restaurant, Long> {
     Optional<Restaurant> findByOwnerId(Long userId);  // Updated method signature
 
 
+    boolean existsByOwnerId(Long userId);
 
 }
