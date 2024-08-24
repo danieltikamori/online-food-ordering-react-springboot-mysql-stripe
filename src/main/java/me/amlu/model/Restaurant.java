@@ -3,8 +3,12 @@ package me.amlu.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.proxy.HibernateProxy;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +19,7 @@ import java.util.Objects;
 @ToString
 @RequiredArgsConstructor
 @Entity
+@Cacheable(true) @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 @AllArgsConstructor
 public class Restaurant {
 
@@ -25,13 +30,18 @@ public class Restaurant {
     @OneToOne
     private User owner;
 
-    @Column(unique = true, nullable = false, length = 200)
+    @Column(nullable = false, length = 255)
+    @NotNull
+    @NotBlank
+    @Size(max = 255)
     private String restaurantName;
 
-    @Column(length = 2000)
+    @Column(length = 2047)
+    @Size(max = 2047)
     private String description;
 
-    @Column(length = 50)
+    @Column(length = 63)
+    @Size(max = 63)
     private String cuisineType;
 
     @OneToOne
@@ -40,15 +50,17 @@ public class Restaurant {
     @Embedded
     private ContactInformation contactInformation;
 
-    @Column(length = 200)
+    @Column(length = 255)
+    @Size(max = 255)
     private String openingHours;
 
-    @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     private List<Order> orders = new ArrayList<>();
 
     @ElementCollection
-    @Column(length = 10000)
+    @Column(length = 8191)
+    @Size(max = 8191)
     private List<String> images;
 
     private LocalDateTime registrationDate;
@@ -58,7 +70,7 @@ public class Restaurant {
     private boolean openNow = true;
 
     @JsonIgnore
-    @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     private List<Food> foods = new ArrayList<>();
 

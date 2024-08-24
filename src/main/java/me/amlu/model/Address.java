@@ -1,17 +1,18 @@
 package me.amlu.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 
-import javax.validation.constraints.Max;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 @Entity
+@Cacheable(true) @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 @Getter
 @Setter
 @AllArgsConstructor
@@ -22,19 +23,35 @@ public class Address {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @Max(200)
+    @Column(nullable = false, length = 255)
+    @NotNull
+    @NotBlank(message = "Street address cannot be blank.")
+    @Size(max = 255)
     private String streetAddress;
 
-    @Max(200)
+
+    @Column(nullable = false, length = 255)
+    @NotNull
+    @NotBlank(message = "City cannot be blank.")
+    @Size(max = 255)
     private String city;
 
-    @Max(200)
+    @Column(nullable = false, length = 255)
+    @NotNull
+    @NotBlank(message = "State/Province cannot be blank.")
+    @Size(max = 255)
     private String stateProvince;
 
-    @Max(100)
+    @Column(nullable = false, length = 255)
+    @NotNull
+    @NotBlank(message = "Postal code cannot be blank.")
+    @Size(max = 255)
     private String postalCode;
 
-    @Max(100)
+    @Column(nullable = false, length = 255)
+    @NotNull
+    @NotBlank(message = "Country cannot be blank.")
+    @Size(max = 255)
     private String country;
 
 }

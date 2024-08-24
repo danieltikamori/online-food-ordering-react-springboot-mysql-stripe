@@ -3,8 +3,12 @@ package me.amlu.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.proxy.HibernateProxy;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
@@ -12,6 +16,7 @@ import java.util.List;
 import java.util.Objects;
 
 @Entity
+@Cacheable(true) @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 @Getter
 @Setter
 @ToString
@@ -23,18 +28,26 @@ public class Food {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @Column(unique = true, nullable = false, length = 500)
+    @Column(nullable = false, length = 255)
+    @NotNull
+    @NotBlank(message = "Name cannot be blank.")
+    @Size(max = 255)
     private String name;
 
-    @Column(length = 2000)
+    @Column(length = 2047)
+    @Size(max = 2047)
     private String description;
 
     @ManyToOne
     private Category foodCategory;
 
+    @Column(nullable = false)
+    @NotNull
+    @NotBlank(message = "Price cannot be blank.")
     private BigDecimal price;
 
-    @Column(length = 10000)
+    @Column(length = 8191)
+    @Size(max = 8191)
     @ElementCollection
     private List<String> images;
 
@@ -46,8 +59,8 @@ public class Food {
     private boolean isVegetarian;
     private boolean isSeasonal;
 
-    @ManyToMany
-    @Column(length = 10000)
+    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
+    @Size(max = 8191)
     private List<IngredientsItems> ingredients = new ArrayList<>();
 
 

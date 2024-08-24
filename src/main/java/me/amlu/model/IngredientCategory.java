@@ -3,13 +3,18 @@ package me.amlu.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.proxy.HibernateProxy;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 @Entity
+@Cacheable(true) @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 @Getter
 @Setter
 //@ToString
@@ -21,7 +26,10 @@ public class IngredientCategory {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @Column(unique = true, nullable = false, length = 80)
+    @Column(nullable = false, length = 63)
+    @NotNull
+    @NotBlank(message = "Category name cannot be blank.")
+    @Size(max = 63)
     private String categoryName;
 
     @JsonIgnore
@@ -29,8 +37,11 @@ public class IngredientCategory {
     private Restaurant restaurant;
 
     @JsonIgnore
-    @Column(nullable = false, length = 1000)
-    @OneToMany(mappedBy = "ingredientCategory", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Column(nullable = false, length = 8191)
+    @NotNull
+    @NotBlank(message = "Ingredients cannot be blank.")
+    @Size(max = 8191)
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "ingredientCategory", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<IngredientsItems> ingredients = new ArrayList<>();
 
 

@@ -3,12 +3,16 @@ package me.amlu.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.proxy.HibernateProxy;
 
-import javax.validation.constraints.Min;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 import java.util.Objects;
 
 @Entity
+@Cacheable(true) @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 @Getter
 @Setter
 @ToString
@@ -20,8 +24,12 @@ public class Category {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    @Min(2)
-    @Column(unique = true, nullable = false, length = 50)
+    // Possibly may need add unique = true
+
+    @Column(nullable = false)
+    @NotBlank(message = "Category name cannot be blank.")
+    @NotNull
+    @Size(max = 255)
     private String categoryName;
 
     @JsonIgnore
