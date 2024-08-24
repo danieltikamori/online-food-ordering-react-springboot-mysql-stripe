@@ -28,24 +28,16 @@ public class CategoryServiceImp implements CategoryService {
 
     @Override
     public Category createCategory(@NonNull String categoryName, Long userId) throws Exception {
-//        Category existingCategory = categoryRepository.findByCategoryName(categoryName);
-//
-//        if (existingCategory != null) {
-//            throw new DuplicateCategoryException("Category with name '" + categoryName + "' already exists");
-//        }
-
 
         Optional<Restaurant> restaurant = restaurantService.getRestaurantsByUserId(userId);
         System.out.println("categoryName: " + categoryName);
         System.out.println("restaurant: " + restaurant);
 
-        if (uniquenessService.isEntityUnique(new Category(), "categoryName", "restaurant")) {
-            throw new DuplicateCategoryException("Category with name '" + categoryName + "' already exists");
-        }
-
         Category category = new Category();
         category.setCategoryName(categoryName);
         category.setRestaurant(restaurant.orElse(null));
+
+        uniquenessService.checkUniqueCategory(category); // Check uniqueness
 
         return categoryRepository.save(category);
     }
@@ -55,6 +47,7 @@ public class CategoryServiceImp implements CategoryService {
 
 //        Optional<Restaurant> restaurant = restaurantService.getRestaurantsByUserId(userId);
 //        return categoryRepository.findCategoryByRestaurantId(restaurant.map(Restaurant::getId).orElse(null));
+//        Optional<Restaurant> restaurant = Optional.ofNullable(restaurantService.findRestaurantById(id));
                 Optional<Restaurant> restaurant = restaurantService.getRestaurantsByUserId(id);
         return categoryRepository.findByRestaurantId(id);
 

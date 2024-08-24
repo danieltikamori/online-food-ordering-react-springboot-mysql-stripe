@@ -1,6 +1,16 @@
 package me.amlu.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import me.amlu.model.Category;
+import me.amlu.model.Food;
+import me.amlu.model.IngredientCategory;
+import me.amlu.model.IngredientsItems;
+import me.amlu.repository.CategoryRepository;
+import me.amlu.repository.FoodRepository;
+import me.amlu.repository.IngredientCategoryRepository;
+import me.amlu.repository.IngredientsItemsRepository;
+import me.amlu.service.Exceptions.DuplicateCategoryException;
+import me.amlu.service.Exceptions.DuplicateFoodException;
+import me.amlu.service.Exceptions.DuplicateItemException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
@@ -9,35 +19,31 @@ import java.util.Arrays;
 
 /**
  * @author Daniel Tikamori
- *
- *  This service is used to check if an entity already exists in the database.
- *  Avoids duplicate entities in the database. Avoid using @Autowired, this is just an example.
- *
- * @Service
- * public class IngredientServiceImp {
- *
- *     private final EntityUniquenessService uniquenessService;
- *     // ... other dependencies ...
- *
- *     @Autowired
- *     public IngredientServiceImp(EntityUniquenessService uniquenessService, / ... other dependencies .../) {
- *         this.uniquenessService = uniquenessService;
- *         // ... initialize other dependencies ...
- *     }
- *
- *     // ...
- *
- *     public IngredientCategory createIngredientCategory(@NonNull String name, @NonNull Long restaurantId) {
- *         IngredientCategory category = new IngredientCategory();
- *         category.setCategoryName(name);
- *         category.setRestaurant(/ ... /);
- *
- *         if (uniquenessService.isEntityUnique(category, "categoryName", "restaurantId")) {
- *             throw new DuplicateCategoryException("Category already exists");
- *         }
- *
- *         return ingredientCategoryRepository.save(category);
- *     }
+ * <p>
+ * This service is used to check if an entity already exists in the database.
+ * Avoids duplicate entities in the database. Avoid using @Autowired, this is just an example.
+ * @Service public class IngredientServiceImp {
+ * <p>
+ * private final EntityUniquenessService uniquenessService;
+ * // ... other dependencies ...
+ * @Autowired public IngredientServiceImp(EntityUniquenessService uniquenessService, / ... other dependencies .../) {
+ * this.uniquenessService = uniquenessService;
+ * // ... initialize other dependencies ...
+ * }
+ * <p>
+ * // ...
+ * <p>
+ * public IngredientCategory createIngredientCategory(@NonNull String name, @NonNull Long restaurantId) {
+ * IngredientCategory category = new IngredientCategory();
+ * category.setCategoryName(name);
+ * category.setRestaurant(/ ... /);
+ * <p>
+ * if (uniquenessService.isEntityUnique(category, "categoryName", "restaurantId")) {
+ * throw new DuplicateCategoryException("Category already exists");
+ * }
+ * <p>
+ * return ingredientCategoryRepository.save(category);
+ * }
  * }
  */
 
@@ -47,9 +53,22 @@ public class EntityUniquenessService {
 
     private final ApplicationContext applicationContext;
 
-//    @Autowired
-    public EntityUniquenessService(ApplicationContext applicationContext) {
+    private final IngredientsItemsRepository ingredientsItemsRepository;
+
+    private final IngredientCategoryRepository ingredientCategoryRepository;
+
+    private final CategoryRepository categoryRepository;
+
+    private final FoodRepository foodRepository;
+
+
+    //    @Autowired
+    public EntityUniquenessService(ApplicationContext applicationContext, IngredientsItemsRepository ingredientsItemsRepository, IngredientCategoryRepository ingredientCategoryRepository, CategoryRepository categoryRepository, FoodRepository foodRepository) {
         this.applicationContext = applicationContext;
+        this.ingredientsItemsRepository = ingredientsItemsRepository;
+        this.ingredientCategoryRepository = ingredientCategoryRepository;
+        this.categoryRepository = categoryRepository;
+        this.foodRepository = foodRepository;
     }
 
     public boolean isEntityUnique(Object entity, String... fieldsToCheck) {
@@ -117,5 +136,46 @@ public class EntityUniquenessService {
             return str;
         }
         return str.substring(0, 1).toUpperCase() + str.substring(1);
+    }
+
+    public void checkUniqueCategory(Category category) throws DuplicateCategoryException {
+        if (categoryRepository.existsByCategoryNameAndRestaurantId(
+                category.getCategoryName(),
+                category.getRestaurant().getId() // Use restaurant ID
+        )) {
+            throw new DuplicateCategoryException("Category name '" + category.getCategoryName() + "' already exists");
+        }
+    }
+
+    public void checkUniqueIngredientCategory(IngredientCategory ingredientCategory) throws DuplicateCategoryException {
+        if (ingredientCategoryRepository.existsByCategoryNameAndRestaurantId(
+                ingredientCategory.getCategoryName(),
+                ingredientCategory.getRestaurant().getId() // Use restaurant ID
+        )) {
+            throw new DuplicateCategoryException("Ingredient category name '" + ingredientCategory.getCategoryName() + "' already exists");
+        }
+
+    }
+
+    public void checkUniqueIngredientItem(IngredientsItems ingredientsItems) throws DuplicateItemException {
+        if (ingredientsItemsRepository.existsByIngredientNameAndIngredientCategoryAndRestaurant(
+                ingredientsItems.getIngredientName(),
+                ingredientsItems.getIngredientCategory(),
+                ingredientsItems.getRestaurant()
+        )) {
+            throw new DuplicateItemException("Ingredient item with name '" +
+                    ingredientsItems.getIngredientName() + "' already exists in this category.");
+        }
+    }
+
+    public void checkUniqueFood(Food food) throws DuplicateFoodException {
+        if (foodRepository.existsByNameAndFoodCategoryAndRestaurant(
+                food.getName(),
+                food.getFoodCategory(),
+                food.getRestaurant()
+        )) {
+            throw new DuplicateFoodException("Food item with name '" + food.getName() + "' already exists in this category.");
+        }
+
     }
 }

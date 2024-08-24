@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -28,21 +27,8 @@ public class CategoryController {
     @PostMapping("/admin/category")
     public ResponseEntity<Category> createCategory(@Valid @RequestBody Category category,
                                                    @RequestHeader("Authorization") String token) throws Exception {
-        Optional<Category> categoryOptional = Optional.ofNullable(category);
-        Optional<String> tokenOptional = Optional.ofNullable(token);
 
-        if (categoryOptional.isEmpty() || tokenOptional.isEmpty()) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                    .body(null);
-        }
         User user = userService.findUserByJwtToken(token);
-        // Check if a category with the same name exists (ignoring case)
-        Category existingCategory = categoryService.findSimilarCategory(category.getCategoryName());
-
-        if (existingCategory != null) {
-            return ResponseEntity.status(HttpStatus.CONFLICT)
-                    .body(existingCategory);
-        }
 
         // If no existing category is found, create a new category
         Category createdCategory = categoryService.createCategory(category.getCategoryName(), user.getId());

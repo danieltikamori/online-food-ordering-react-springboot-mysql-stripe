@@ -7,6 +7,7 @@ import me.amlu.model.Restaurant;
 import me.amlu.repository.IngredientCategoryRepository;
 import me.amlu.repository.IngredientsItemsRepository;
 import me.amlu.service.Exceptions.DuplicateCategoryException;
+import me.amlu.service.Exceptions.DuplicateItemException;
 import me.amlu.service.Exceptions.IngredientCategoryNotFoundException;
 import me.amlu.service.Exceptions.IngredientsItemsNotFoundException;
 import org.springframework.stereotype.Service;
@@ -15,7 +16,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-public class IngredientServiceImp implements IngredientsService {
+public class IngredientsServiceImp implements IngredientsService {
 
     private final EntityUniquenessService uniquenessService;
 
@@ -25,7 +26,7 @@ public class IngredientServiceImp implements IngredientsService {
 
     private final RestaurantService restaurantService;
 
-    public IngredientServiceImp(EntityUniquenessService uniquenessService, IngredientsItemsRepository ingredientsItemsRepository, IngredientCategoryRepository ingredientCategoryRepository, RestaurantService restaurantService) {
+    public IngredientsServiceImp(EntityUniquenessService uniquenessService, IngredientsItemsRepository ingredientsItemsRepository, IngredientCategoryRepository ingredientCategoryRepository, RestaurantService restaurantService) {
         this.uniquenessService = uniquenessService;
         this.ingredientsItemsRepository = ingredientsItemsRepository;
         this.ingredientCategoryRepository = ingredientCategoryRepository;
@@ -38,18 +39,19 @@ public class IngredientServiceImp implements IngredientsService {
         Restaurant restaurant = restaurantService.findRestaurantById(restaurantId);
 
         // Check if a category with the same name already exists for this restaurant
-//        Optional<IngredientCategory> existingCategory = ingredientCategoryRepository.findByCategoryNameAndRestaurantId(name, restaurantId);
+//        Optional<IngredientCategory> existingCategory = ingredientCategoryRepository.findByCategoryNameAndRestaurantId(categoryName, restaurantId);
 //        if (existingCategory.isPresent()) {
-//            throw new DuplicateCategoryException("Category with name '" + name + "' already exists for this restaurant.");
+//            throw new DuplicateCategoryException("Category with name '" + categoryName + "' already exists for this restaurant.");
 //        }
-        if (uniquenessService.isEntityUnique(new IngredientCategory(), "categoryName", "restaurant")) {
-            throw new DuplicateCategoryException("Ingredient category name '" + categoryName + "' already exists");
-        }
+//        if (uniquenessService.isEntityUnique(new IngredientCategory(), "categoryName", "restaurant")) {
+//            throw new DuplicateCategoryException("Ingredient category name '" + categoryName + "' already exists");
+//        }
 
         IngredientCategory ingredientCategory = new IngredientCategory();
         ingredientCategory.setCategoryName(categoryName);
         ingredientCategory.setRestaurant(restaurant);
 
+        uniquenessService.checkUniqueIngredientCategory(ingredientCategory); // Check uniqueness
 
         return ingredientCategoryRepository.save(ingredientCategory);
 
@@ -81,10 +83,10 @@ public class IngredientServiceImp implements IngredientsService {
         Restaurant restaurant = restaurantService.findRestaurantById(restaurantId);
         IngredientCategory ingredientCategory = findIngredientCategoryById(ingredientCategoryId);
 
-        if (uniquenessService.isEntityUnique(new IngredientsItems(), "ingredientName", "ingredientCategory", "restaurant")) {
-            throw new DuplicateCategoryException("Ingredient item with name '" + ingredientName +
-                    "' already exists in this category.");
-        }
+//        if (uniquenessService.isEntityUnique(new IngredientsItems(), "ingredientName", "ingredientCategory", "restaurant")) {
+//            throw new DuplicateItemException("Ingredient item with name '" + ingredientName +
+//                    "' already exists in this category.");
+//        }
 
         IngredientsItems ingredientsItems = new IngredientsItems();
         ingredientsItems.setIngredientName(ingredientName);
@@ -92,9 +94,9 @@ public class IngredientServiceImp implements IngredientsService {
         ingredientsItems.setRestaurant(restaurant);
         ingredientsItems.setInStock(true);
 
-        IngredientsItems ingredient = ingredientsItemsRepository.save(ingredientsItems);
-        ingredientCategory.getIngredients().add(ingredient);
-        return ingredient;
+        uniquenessService.checkUniqueIngredientItem(ingredientsItems); // Check uniqueness
+        return ingredientsItemsRepository.save(ingredientsItems);
+
     }
 
     @Override
