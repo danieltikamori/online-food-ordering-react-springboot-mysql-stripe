@@ -2,11 +2,12 @@ package me.amlu.controller;
 
 import me.amlu.model.Cart;
 import me.amlu.model.USER_ROLE;
+import me.amlu.model.User;
 import me.amlu.request.LoginRequest;
+import me.amlu.request.UserRegisterRequest;
 import me.amlu.response.AuthResponse;
 import me.amlu.service.CustomerUserDetailsService;
 import me.amlu.config.JwtProvider;
-import me.amlu.model.User;
 import me.amlu.repository.CartRepository;
 import me.amlu.repository.UserRepository;
 import org.springframework.http.HttpStatus;
@@ -20,7 +21,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 import java.util.Collection;
 
 @RestController
@@ -33,7 +34,6 @@ public class AuthController {
     private final CustomerUserDetailsService customerUserDetailsService;
     private final CartRepository cartRepository;
 
-
     public AuthController(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtProvider jwtProvider, CustomerUserDetailsService customerUserDetailsService, CartRepository cartRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
@@ -45,21 +45,24 @@ public class AuthController {
 @PostMapping("/signup")
     public ResponseEntity<AuthResponse> createUserHandler(@Valid @RequestBody User user) {
 
-       User isEmailExist = userRepository.findByEmail(user.getEmail());
-       if(isEmailExist != null) {
-           throw new BadCredentialsException("Email already registered.");
-       }
+    // Check if email already exists
+    User isEmailExist = userRepository.findByEmail(user.getEmail());
+    if(isEmailExist != null) {
+        throw new BadCredentialsException("Email already registered.");
+    }
 
-       User createdUser = new User();
+    // Create new User object from validated UserRegisterRequest (password is already validated)
+    me.amlu.model.User createdUser = new me.amlu.model.User();
+    createdUser.setEmail(user.getEmail());
+    createdUser.setFullName(user.getFullName());
+    createdUser.setDeletedAt(null);
+    createdUser.setPassword(passwordEncoder.encode(user.getPassword()));
+    createdUser.setRole(user.getRole());
+    createdUser.setAddresses(user.getAddresses());
+    createdUser.setFavoriteRestaurants(user.getFavoriteRestaurants());
 
-       createdUser.setEmail(user.getEmail());
-       createdUser.setFullName(user.getFullName());
-       createdUser.setPassword(passwordEncoder.encode(user.getPassword()));
-       createdUser.setRole(user.getRole());
-       createdUser.setAddresses(user.getAddresses());
-       createdUser.setFavoriteRestaurants(user.getFavoriteRestaurants());
-
-       User savedUser = userRepository.save(createdUser);
+    // Save the user
+    me.amlu.model.User savedUser = userRepository.save(createdUser);
 
         Cart cart = new Cart();
         cart.setCustomer(savedUser);
