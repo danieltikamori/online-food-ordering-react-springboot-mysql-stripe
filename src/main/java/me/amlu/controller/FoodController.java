@@ -1,5 +1,6 @@
 package me.amlu.controller;
 
+import me.amlu.dto.FoodDto;
 import me.amlu.model.Food;
 import me.amlu.model.User;
 import me.amlu.service.FoodService;
@@ -41,8 +42,8 @@ public class FoodController {
 
     @GetMapping("/restaurant/{restaurantId}")
     public ResponseEntity<List<Food>> getRestaurantFood(@RequestParam boolean vegetarian,
-                                                 @RequestParam boolean nonVegetarian,
-                                                 @RequestParam boolean seasonal,
+                                                 @RequestParam (required = false) boolean nonVegetarian,
+                                                 @RequestParam (required = false)boolean seasonal,
                                                  @RequestParam(required = false) String food_category,
                                                  @PathVariable Long restaurantId,
                                                  @RequestHeader("Authorization") String token) throws Exception {
@@ -52,5 +53,20 @@ public class FoodController {
         List<Food> foods = foodService.getRestaurantsFood(restaurantId, vegetarian, nonVegetarian, seasonal, food_category);
         return new ResponseEntity<>(foods, HttpStatus.OK);
     }
+
+    @GetMapping("/restaurant/{restaurantId}/{foodId}")
+    public ResponseEntity<FoodDto> getFoodIngredients(@PathVariable Long restaurantId,
+                                                      @PathVariable Long foodId,
+                                                      @RequestHeader("Authorization") String token) throws Exception {
+
+        // Validate the token and get the user details
+        User user = userService.findUserByJwtToken(token);
+
+        // If the user has the necessary permissions, proceed with the request
+        FoodDto foodDto = foodService.getFoodIngredients(restaurantId, foodId);
+        return new ResponseEntity<>(foodDto, HttpStatus.OK);
+    }
+
+
 
 }

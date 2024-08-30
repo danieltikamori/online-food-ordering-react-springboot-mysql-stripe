@@ -1,5 +1,6 @@
 package me.amlu.service;
 
+import me.amlu.dto.FoodDto;
 import me.amlu.model.Category;
 import me.amlu.model.Food;
 import me.amlu.model.Restaurant;
@@ -26,4 +27,5 @@ public interface FoodService {
 
     public Food updateAvailabilityStatus(Long foodId) throws Exception;
 
+    FoodDto getFoodIngredients(Long restaurantId, Long foodId) throws Exception;
 }
