@@ -50,7 +50,7 @@ public class Order {
     @ManyToOne
     private Address deliveryAddress;
 
-    @OneToMany(fetch = FetchType.LAZY)
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     private List<OrderItem> orderItems;
 
