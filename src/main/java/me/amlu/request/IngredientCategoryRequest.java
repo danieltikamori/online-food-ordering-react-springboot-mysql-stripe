@@ -6,9 +6,7 @@ import me.amlu.service.UniqueEntity;
 @Data
 public class IngredientCategoryRequest {
 
-    @UniqueEntity(fields = {"categoryName", "restaurantId"})
     private String categoryName;
-
 
     private Long restaurantId;
 }
