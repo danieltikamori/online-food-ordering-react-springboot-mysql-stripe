@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import lombok.*;
-import me.amlu.config.StrongPassword;
 import me.amlu.dto.RestaurantDto;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.proxy.HibernateProxy;
@@ -45,7 +44,7 @@ public class User {
     private Instant deletedAt;
 
     // To avoid password leakage, we will use the JsonProperty annotation as write-only.
-    @StrongPassword
+//    @StrongPassword
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(nullable = false)
     @NotNull
@@ -60,7 +59,7 @@ public class User {
     private USER_ROLE role = USER_ROLE.ROLE_CUSTOMER;
 
     @JsonIgnore
-    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, mappedBy = "customer")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "customer")
     @ToString.Exclude
     private List<Order> orders = new ArrayList<>();
 
