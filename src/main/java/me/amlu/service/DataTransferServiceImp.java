@@ -1,6 +1,7 @@
 package me.amlu.service;
 
 import lombok.NonNull;
+import me.amlu.model.AnonymizedData;
 import me.amlu.model.User;
 import org.springframework.stereotype.Service;
 
@@ -51,7 +52,10 @@ public class DataTransferServiceImp implements DataTransferService {
         try {
             boolean isAnonymized = anonymizationService.anonymizeUser(user);
             if (isAnonymized) {
+//                TODO:
                 //Transfer the data to a third-party service or storage
+                dataRetentionPolicy.applyRetentionPolicy(new AnonymizedData(), null);
+                log.info("User data was anonymized and transferred successfully.");
             } else {
                 log.severe("User data was not anonymized.");
 

@@ -11,7 +11,9 @@ public class UserDataController {
             // Collect and process the user data
             collectAndProcessUserData(user);
         } else {
+//            TODO:
             // Do not collect and process the user data
+            System.out.println("User did not consent.");
         }
     }
 
