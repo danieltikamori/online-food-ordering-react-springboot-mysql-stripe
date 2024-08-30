@@ -28,7 +28,7 @@ public class Cart {
 
     private BigDecimal totalAmount;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     private List<CartItem> cartItems = new ArrayList<>(); //<Food, Quantity>
 

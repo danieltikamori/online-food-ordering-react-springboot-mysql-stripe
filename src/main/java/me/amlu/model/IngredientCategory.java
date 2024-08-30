@@ -41,7 +41,7 @@ public class IngredientCategory {
     @NotNull
     @NotBlank(message = "Ingredients cannot be blank.")
     @Size(max = 8191)
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "ingredientCategory", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "ingredientCategory", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<IngredientsItems> ingredients = new ArrayList<>();
 
 

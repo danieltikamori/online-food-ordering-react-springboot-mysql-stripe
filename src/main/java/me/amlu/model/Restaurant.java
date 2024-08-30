@@ -70,7 +70,7 @@ public class Restaurant {
     private boolean openNow = true;
 
     @JsonIgnore
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     private List<Food> foods = new ArrayList<>();
 

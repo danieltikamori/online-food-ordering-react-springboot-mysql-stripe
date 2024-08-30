@@ -59,7 +59,7 @@ public class Food {
     private boolean isVegetarian;
     private boolean isSeasonal;
 
-    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
+    @ManyToMany(cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
     @Size(max = 8191)
     private List<IngredientsItems> ingredients = new ArrayList<>();
 
