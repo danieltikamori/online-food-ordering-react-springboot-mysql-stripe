@@ -1,10 +1,10 @@
 package me.amlu.dto;
 
 import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Embeddable;
 import lombok.Data;
 
+import jakarta.validation.constraints.Size;
 import java.util.List;
 import java.util.Objects;
 
@@ -12,12 +12,18 @@ import java.util.Objects;
 @Embeddable
 public class RestaurantDto {
 
+    @Column(length = 255)
+    @Size(max = 255)
     private String title;
 
-    @Column(length = 1000)
+    @Column(length = 8191)
+    @Size(max = 8191)
     private List<String> images;
 
+    @Column(length = 2047)
+    @Size(max = 2047)
     private String description;
+
     private Long id;
 
 

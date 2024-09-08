@@ -1,5 +1,6 @@
 package me.amlu.service;
 
+import lombok.NonNull;
 import me.amlu.model.Cart;
 import me.amlu.model.CartItem;
 import me.amlu.model.Food;
@@ -7,9 +8,13 @@ import me.amlu.model.User;
 import me.amlu.repository.CartItemRepository;
 import me.amlu.repository.CartRepository;
 import me.amlu.request.AddCartItemRequest;
+import me.amlu.service.Exceptions.CartItemNotFoundException;
+import me.amlu.service.Exceptions.CartNotFoundException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Optional;
 
 @Service
@@ -53,16 +58,17 @@ public class CartServiceImp implements CartService {
         newCartItem.setQuantity(request.getQuantity());
         newCartItem.setIngredients(request.getIngredients());
         newCartItem.setTotalAmount(food.getPrice().multiply(BigDecimal.valueOf(request.getQuantity())));
+        newCartItem.setUpdatedAt(Instant.now());
+        newCartItem.setUpdatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
 
         CartItem savedCartItem = cartItemRepository.save(newCartItem);
         cart.getCartItems().add(savedCartItem);
 
-//        cartRepository.save(cart);
         return savedCartItem;
     }
 
     @Override
-    public CartItem updateCartItemQuantity(Long cartItemId, int quantity) throws Exception {
+    public CartItem updateCartItemQuantity(@NonNull Long cartItemId, int quantity) throws Exception {
         Optional<CartItem> cartItemOptional = cartItemRepository.findById(cartItemId);
         if (cartItemOptional.isEmpty()) {
             throw new CartItemNotFoundException("Cart item not found.");
@@ -70,11 +76,14 @@ public class CartServiceImp implements CartService {
         CartItem cartItem = cartItemOptional.get();
         cartItem.setQuantity(quantity);
         cartItem.setTotalAmount(cartItem.getFood().getPrice().multiply(BigDecimal.valueOf(quantity)));
+        cartItem.setUpdatedAt(Instant.now());
+        cartItem.setUpdatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+
         return cartItemRepository.save(cartItem);
     }
 
     @Override
-    public Cart removeCartItem(Long cartItemId, String token) throws Exception {
+    public Cart removeCartItem(@NonNull Long cartItemId, String token) throws Exception {
 
         User user = userService.findUserByJwtToken(token);
 
@@ -86,7 +95,8 @@ public class CartServiceImp implements CartService {
         }
         CartItem cartItem = cartItemOptional.get();
         cart.getCartItems().remove(cartItem);
-//        cartItemRepository.delete(cartItem);
+        cartItem.setUpdatedAt(Instant.now());
+        cartItem.setUpdatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         return cartRepository.save(cart);
     }
 
@@ -121,12 +131,16 @@ public class CartServiceImp implements CartService {
     }
 
     @Override
-    public Cart clearCart(Long customerId) throws Exception {
+    public Cart clearCart(@NonNull Long customerId) throws Exception {
 
 //        User user = userService.findUserByJwtToken(token);
          Cart cart = findCartByCustomerId(customerId);
 
         cart.getCartItems().clear();
+        cart.setTotalAmount(BigDecimal.ZERO);
+        cart.setUpdatedAt(Instant.now());
+        cart.setUpdatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+
         return cartRepository.save(cart);
     }
 }

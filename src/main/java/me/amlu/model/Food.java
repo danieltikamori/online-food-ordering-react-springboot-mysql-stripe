@@ -3,15 +3,21 @@ package me.amlu.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.proxy.HibernateProxy;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 
 @Entity
+@Cacheable(true) @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 @Getter
 @Setter
 @ToString
@@ -23,16 +29,26 @@ public class Food {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    @Column(nullable = false, length = 255)
+    @NotNull
+    @NotBlank(message = "Name cannot be blank.")
+    @Size(max = 255)
     private String name;
 
+    @Column(length = 2047)
+    @Size(max = 2047)
     private String description;
 
     @ManyToOne
     private Category foodCategory;
 
+    @Column(nullable = false)
+    @NotNull
+    @NotBlank(message = "Price cannot be blank.")
     private BigDecimal price;
 
-    @Column(length = 1000)
+    @Column(length = 8191)
+    @Size(max = 8191)
     @ElementCollection
     private List<String> images;
 
@@ -44,13 +60,37 @@ public class Food {
     private boolean isVegetarian;
     private boolean isSeasonal;
 
-    @ManyToMany
-    @ToString.Exclude
+    @ManyToMany(cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
+    @Size(max = 8191)
     private List<IngredientsItems> ingredients = new ArrayList<>();
 
+    @Column(nullable = false, name = "created_at", updatable = false, columnDefinition = "DATETIME ZONE='UTC'")
+    @NotNull
+    @NotBlank
+    private Instant createdAt;
 
-    private Date creationDate;
-    private Date updateDate;
+    @Column(nullable = false, name = "created_by", updatable = false)
+    @NotNull
+    @NotBlank
+    private User createdBy;
+
+    @Column(nullable = false, name = "updated_at", columnDefinition = "DATETIME ZONE='UTC'")
+    @NotNull
+    @NotBlank
+    private Instant updatedAt;
+
+    @Column(nullable = false, name = "updated_by")
+    @NotNull
+    @NotBlank
+    private User updatedBy;
+
+    @Column(nullable = true, name = "deleted_at", columnDefinition = "DATETIME ZONE='UTC'")
+    private Instant deletedAt;
+
+    @ManyToOne
+    @JoinColumn(nullable = true, name = "deleted_by_id")
+    private User deletedBy;
+
 
     @Override
     public final boolean equals(Object o) {

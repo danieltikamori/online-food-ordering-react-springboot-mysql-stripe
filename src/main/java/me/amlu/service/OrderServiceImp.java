@@ -1,13 +1,18 @@
 package me.amlu.service;
 
+import lombok.NonNull;
 import me.amlu.model.*;
 import me.amlu.repository.*;
 import me.amlu.request.OrderRequest;
+import me.amlu.service.Exceptions.OrderCannotBeCancelledException;
+import me.amlu.service.Exceptions.OrderNotFoundException;
+import me.amlu.service.Exceptions.OrderStatusNotFoundException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -37,7 +42,7 @@ public class OrderServiceImp implements OrderService {
     }
 
     @Override
-    public Order createOrder(OrderRequest order, User user) throws Exception {
+    public Order createOrder(@NonNull OrderRequest order, User user) throws Exception {
 
         Address deliveryAddress = order.getDeliveryAddress();
         Address savedAddress = addressRepository.save(deliveryAddress);
@@ -52,9 +57,12 @@ public class OrderServiceImp implements OrderService {
         Order createdOrder = new Order();
         createdOrder.setCustomer(user);
         createdOrder.setRestaurant(restaurant);
-        createdOrder.setCreatedAt(new Date());
         createdOrder.setOrderStatus("PENDING");
         createdOrder.setDeliveryAddress(savedAddress);
+        createdOrder.setCreatedAt(Instant.now());
+        createdOrder.setUpdatedAt(Instant.now());
+        createdOrder.setCreatedBy(user);
+        createdOrder.setUpdatedBy(user);
 
         Cart cart = cartService.findCartByCustomerId(user.getId());
 
@@ -87,34 +95,40 @@ public class OrderServiceImp implements OrderService {
     }
 
     @Override
-    public Order updateOrder(Long orderId, String orderStatus) throws Exception {
+    public Order updateOrder(@NonNull Long orderId, @NonNull String orderStatus) throws Exception {
 
         Order order = findOrderById(orderId);
-        if (orderStatus.equals("OUT_FOR_DELIVERY")
-                || (orderStatus.equals("DELIVERED"))
-                || (orderStatus.equals("COMPLETED"))
-                || (orderStatus.equals("PENDING"))
-                || (orderStatus.equals("CANCELLED"))) {
+        if ("OUT_FOR_DELIVERY".equals(orderStatus)
+                || ("DELIVERED".equals(orderStatus))
+                || ("COMPLETED".equals(orderStatus))
+                || ("PENDING".equals(orderStatus))
+                || ("CANCELLED".equals(orderStatus))) {
 
 
             order.setOrderStatus(orderStatus);
+            order.setUpdatedAt(Instant.now());
+            order.setUpdatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+
             return orderRepository.save(order);
         }
         throw new OrderStatusNotFoundException("Please provide a valid order status.");
     }
 
     @Override
-    public void cancelOrder(Long orderId) throws Exception {
+    public void cancelOrder(@NonNull Long orderId) throws Exception {
 
         Order order = findOrderById(orderId);
 
-        if(order.getOrderStatus().equals("PENDING")) {
-            order.setOrderStatus("CANCELLED");
+
+        if (order.getOrderStatus().equals(ORDER_STATUS.PENDING.toString())) {
+            order.setOrderStatus(ORDER_STATUS.CANCELLED.toString());
+            order.setUpdatedAt(Instant.now());
+            order.setUpdatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
             orderRepository.save(order);
+        } else {
+            throw new OrderCannotBeCancelledException("Order cannot be cancelled.");
         }
-        else {
-            throw new OrderStatusNotFoundException("Order status not found.");
-        }
+
 
     }
 
@@ -143,10 +157,12 @@ public class OrderServiceImp implements OrderService {
     }
 
     @Override
-    public void deleteOrder(Long orderId) throws Exception {
-
-        Order order = findOrderById(orderId);
-        orderRepository.deleteById(orderId);
-
+    public void deleteOrder(Long orderId) throws OrderNotFoundException {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException("Order not found."));
+        order.setDeletedAt(Instant.now());
+        order.setDeletedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        orderRepository.save(order);
     }
+
 }

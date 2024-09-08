@@ -3,11 +3,18 @@ package me.amlu.model;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.proxy.HibernateProxy;
 
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+
+import java.time.Instant;
 import java.util.Objects;
 
 @Entity
+@Cacheable(true) @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 @Getter
 @Setter
 @ToString
@@ -19,6 +26,10 @@ public class IngredientsItems {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    @Column(nullable = false, length = 127)
+    @NotNull
+    @NotBlank(message = "Ingredient name cannot be blank.")
+    @Size(max = 127)
     private String ingredientName;
 
     @ManyToOne
@@ -29,6 +40,33 @@ public class IngredientsItems {
     private Restaurant restaurant;
 
     private boolean inStock = true;
+
+    @Column(nullable = false, name = "created_at", updatable = false, columnDefinition = "DATETIME ZONE='UTC'")
+    @NotNull
+    @NotBlank
+    private Instant createdAt;
+
+    @Column(nullable = false, name = "created_by", updatable = false)
+    @NotNull
+    @NotBlank
+    private User createdBy;
+
+    @Column(nullable = false, name = "updated_at", columnDefinition = "DATETIME ZONE='UTC'")
+    @NotNull
+    @NotBlank
+    private Instant updatedAt;
+
+    @Column(nullable = false, name = "updated_by")
+    @NotNull
+    @NotBlank
+    private User updatedBy;
+
+    @Column(nullable = true, name = "deleted_at", columnDefinition = "DATETIME ZONE='UTC'")
+    private Instant deletedAt;
+
+    @ManyToOne
+    @JoinColumn(nullable = true, name = "deleted_by_id")
+    private User deletedBy;
 
     @Override
     public final boolean equals(Object o) {

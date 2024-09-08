@@ -1,12 +1,23 @@
 package me.amlu.service;
 
-import me.amlu.model.Category;
-import me.amlu.model.Food;
-import me.amlu.model.Restaurant;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
+import me.amlu.dto.FoodDto;
+import me.amlu.dto.IngredientItemDto;
+import me.amlu.model.*;
 import me.amlu.repository.FoodRepository;
+import me.amlu.repository.UserRepository;
 import me.amlu.request.CreateFoodRequest;
+import me.amlu.service.Exceptions.FoodNotFoundException;
+import me.amlu.service.Exceptions.RestaurantNotFoundException;
+import org.hibernate.Hibernate;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -14,28 +25,52 @@ import java.util.stream.Collectors;
 @Service
 public class FoodServiceImp implements FoodService {
 
+    private final EntityUniquenessService uniquenessService;
+
     private final FoodRepository foodRepository;
+    final UserRepository userRepository;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
 
-    public FoodServiceImp(FoodRepository foodRepository) {
+    public FoodServiceImp(EntityUniquenessService uniquenessService, FoodRepository foodRepository, UserRepository userRepository) {
+        this.uniquenessService = uniquenessService;
         this.foodRepository = foodRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
-    public Food createFood(CreateFoodRequest createFoodRequest, Category category, Restaurant restaurant) {
+    @Transactional
+    public Food createFood(CreateFoodRequest createFoodRequest, Category category, Restaurant restaurant) throws Exception {
+
         Food food = new Food();
         food.setFoodCategory(category);
         food.setRestaurant(restaurant);
+
+        List<IngredientsItems> ingredients = createFoodRequest.getIngredients();
+        List<IngredientsItems> mergedIngredients = new ArrayList<>();
+        for (IngredientsItems ingredient : ingredients) {
+            // Have an EntityManager injected
+            mergedIngredients.add(entityManager.merge(ingredient));
+        }
+        food.setIngredients(mergedIngredients);
 
         food.setName(createFoodRequest.getName());
         food.setDescription(createFoodRequest.getDescription());
         food.setPrice(createFoodRequest.getPrice());
         food.setImages(createFoodRequest.getImages());
-        food.setIngredients(createFoodRequest.getIngredients());
+//        food.setIngredients(createFoodRequest.getIngredients());
 
         food.setSeasonal(createFoodRequest.isSeasonal());
         food.setVegetarian(createFoodRequest.isVegetarian());
+        food.setCreatedAt(Instant.now());
+        food.setUpdatedAt(Instant.now());
+        food.setCreatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        food.setUpdatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
 
+
+        uniquenessService.checkUniqueFood(food); // Check if food name already exists
         Food savedFood = foodRepository.save(food);
         restaurant.getFoods().add(savedFood);
 
@@ -43,10 +78,16 @@ public class FoodServiceImp implements FoodService {
     }
 
     @Override
-    public void deleteFood(Long foodId) throws Exception {
+    public void deleteFood(Long foodId, Restaurant restaurant, Long userId) throws Exception {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         Food food = findFoodById(foodId);
         food.setRestaurant(null);
+        food.setFoodCategory(null);
+        food.setIngredients(null);
+        food.setDeletedAt(Instant.now());
+        food.setDeletedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+
 
 //        foodRepository.delete(food);
         foodRepository.save(food);
@@ -76,6 +117,7 @@ public class FoodServiceImp implements FoodService {
         }
 
 //        Another approach instead of the if statements above that required creating new methods:
+//        if(isVegetarian) {
 //            foodList = foodList.stream().filter(food -> food.isVegetarian()).toList();
 //        }
 //
@@ -150,7 +192,40 @@ public class FoodServiceImp implements FoodService {
 
         Food food = findFoodById(foodId);
         food.setAvailable(!food.isAvailable());
+        food.setUpdatedAt(Instant.now());
+        food.setUpdatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
 
         return foodRepository.save(food);
+    }
+
+    @Override
+    public FoodDto getFoodIngredients(Long restaurantId, Long foodId) throws Exception {
+
+        Food food = findFoodById(foodId);
+        if (!food.getRestaurant().getId().equals(restaurantId)) {
+            throw new RestaurantNotFoundException("Restaurant not found.");
+        }
+
+        // Force lazy loading of ingredients
+        Hibernate.initialize(food.getIngredients());
+
+        // Create and populate the DTO
+        FoodDto foodDto = new FoodDto();
+        foodDto.setId(food.getId());
+        foodDto.setName(food.getName());
+        // ... map other fields from food to foodDto ...
+        // Map ingredients to IngredientItemDto
+        List<IngredientItemDto> ingredientDtos = food.getIngredients().stream()
+                .map(ingredient -> {
+                    IngredientItemDto ingredientDto = new IngredientItemDto();
+                    ingredientDto.setId(ingredient.getId());
+                    ingredientDto.setIngredientName(ingredient.getIngredientName());
+                    ingredientDto.setIngredientCategory(ingredient.getIngredientCategory()); // Add category mapping
+                    // ... map other fields from ingredient to ingredientDto ...
+                    return ingredientDto;
+                })
+                .toList();
+        foodDto.setIngredients(ingredientDtos);
+        return foodDto;
     }
 }
