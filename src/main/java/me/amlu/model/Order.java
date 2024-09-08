@@ -37,15 +37,37 @@ public class Order {
     @ManyToOne
     private Restaurant restaurant;
 
-    @Column(nullable = false, length = 63)
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     @Size(max = 63)
-    private String orderStatus;
+    private ORDER_STATUS orderStatus;
 
-    private Date createdAt;
+    @Column(nullable = false, name = "created_at", updatable = false, columnDefinition = "DATETIME ZONE='UTC'")
+    @NotNull
+    @NotBlank
+    private Instant createdAt;
 
-    private Date updatedAt;
+    @Column(nullable = false, name = "created_by", updatable = false)
+    @NotNull
+    @NotBlank
+    private User createdBy;
 
+    @Column(nullable = false, name = "updated_at", columnDefinition = "DATETIME ZONE='UTC'")
+    @NotNull
+    @NotBlank
+    private Instant updatedAt;
+
+    @Column(nullable = false, name = "updated_by")
+    @NotNull
+    @NotBlank
+    private User updatedBy;
+
+    @Column(nullable = true, name = "deleted_at", columnDefinition = "DATETIME ZONE='UTC'")
     private Instant deletedAt;
+
+    @ManyToOne
+    @JoinColumn(nullable = true, name = "deleted_by_id")
+    private User deletedBy;
 
     @ManyToOne
     private Address deliveryAddress;

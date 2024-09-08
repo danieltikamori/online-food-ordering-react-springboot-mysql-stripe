@@ -10,6 +10,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -63,9 +64,33 @@ public class Food {
     @Size(max = 8191)
     private List<IngredientsItems> ingredients = new ArrayList<>();
 
+    @Column(nullable = false, name = "created_at", updatable = false, columnDefinition = "DATETIME ZONE='UTC'")
+    @NotNull
+    @NotBlank
+    private Instant createdAt;
 
-    private Date creationDate;
-    private Date updateDate;
+    @Column(nullable = false, name = "created_by", updatable = false)
+    @NotNull
+    @NotBlank
+    private User createdBy;
+
+    @Column(nullable = false, name = "updated_at", columnDefinition = "DATETIME ZONE='UTC'")
+    @NotNull
+    @NotBlank
+    private Instant updatedAt;
+
+    @Column(nullable = false, name = "updated_by")
+    @NotNull
+    @NotBlank
+    private User updatedBy;
+
+    @Column(nullable = true, name = "deleted_at", columnDefinition = "DATETIME ZONE='UTC'")
+    private Instant deletedAt;
+
+    @ManyToOne
+    @JoinColumn(nullable = true, name = "deleted_by_id")
+    private User deletedBy;
+
 
     @Override
     public final boolean equals(Object o) {

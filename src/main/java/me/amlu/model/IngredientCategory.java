@@ -9,6 +9,8 @@ import org.hibernate.proxy.HibernateProxy;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -43,6 +45,33 @@ public class IngredientCategory {
     @Size(max = 8191)
     @OneToMany(mappedBy = "ingredientCategory", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<IngredientsItems> ingredients = new ArrayList<>();
+
+    @Column(nullable = false, name = "created_at", updatable = false, columnDefinition = "DATETIME ZONE='UTC'")
+    @NotNull
+    @NotBlank
+    private Instant createdAt;
+
+    @Column(nullable = false, name = "created_by", updatable = false)
+    @NotNull
+    @NotBlank
+    private User createdBy;
+
+    @Column(nullable = false, name = "updated_at", columnDefinition = "DATETIME ZONE='UTC'")
+    @NotNull
+    @NotBlank
+    private Instant updatedAt;
+
+    @Column(nullable = false, name = "updated_by")
+    @NotNull
+    @NotBlank
+    private User updatedBy;
+
+    @Column(nullable = true, name = "deleted_at", columnDefinition = "DATETIME ZONE='UTC'")
+    private Instant deletedAt;
+
+    @ManyToOne
+    @JoinColumn(nullable = true, name = "deleted_by_id")
+    private User deletedBy;
 
 
     @Override
