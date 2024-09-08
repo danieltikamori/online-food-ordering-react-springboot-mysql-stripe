@@ -10,9 +10,11 @@ import me.amlu.repository.CartRepository;
 import me.amlu.request.AddCartItemRequest;
 import me.amlu.service.Exceptions.CartItemNotFoundException;
 import me.amlu.service.Exceptions.CartNotFoundException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.Optional;
 
 @Service
@@ -56,11 +58,12 @@ public class CartServiceImp implements CartService {
         newCartItem.setQuantity(request.getQuantity());
         newCartItem.setIngredients(request.getIngredients());
         newCartItem.setTotalAmount(food.getPrice().multiply(BigDecimal.valueOf(request.getQuantity())));
+        newCartItem.setUpdatedAt(Instant.now());
+        newCartItem.setUpdatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
 
         CartItem savedCartItem = cartItemRepository.save(newCartItem);
         cart.getCartItems().add(savedCartItem);
 
-//        cartRepository.save(cart);
         return savedCartItem;
     }
 
@@ -73,6 +76,9 @@ public class CartServiceImp implements CartService {
         CartItem cartItem = cartItemOptional.get();
         cartItem.setQuantity(quantity);
         cartItem.setTotalAmount(cartItem.getFood().getPrice().multiply(BigDecimal.valueOf(quantity)));
+        cartItem.setUpdatedAt(Instant.now());
+        cartItem.setUpdatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+
         return cartItemRepository.save(cartItem);
     }
 
@@ -89,7 +95,8 @@ public class CartServiceImp implements CartService {
         }
         CartItem cartItem = cartItemOptional.get();
         cart.getCartItems().remove(cartItem);
-//        cartItemRepository.delete(cartItem);
+        cartItem.setUpdatedAt(Instant.now());
+        cartItem.setUpdatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
         return cartRepository.save(cart);
     }
 
@@ -130,6 +137,10 @@ public class CartServiceImp implements CartService {
          Cart cart = findCartByCustomerId(customerId);
 
         cart.getCartItems().clear();
+        cart.setTotalAmount(BigDecimal.ZERO);
+        cart.setUpdatedAt(Instant.now());
+        cart.setUpdatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+
         return cartRepository.save(cart);
     }
 }

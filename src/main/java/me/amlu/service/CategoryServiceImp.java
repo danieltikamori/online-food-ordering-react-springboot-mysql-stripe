@@ -3,11 +3,14 @@ package me.amlu.service;
 import lombok.NonNull;
 import me.amlu.model.Category;
 import me.amlu.model.Restaurant;
+import me.amlu.model.User;
 import me.amlu.repository.CategoryRepository;
 import me.amlu.service.Exceptions.CategoryNotFoundException;
 import me.amlu.service.Exceptions.DuplicateCategoryException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,6 +39,12 @@ public class CategoryServiceImp implements CategoryService {
         Category category = new Category();
         category.setCategoryName(categoryName);
         category.setRestaurant(restaurant.orElse(null));
+        category.setCreatedAt(Instant.now());
+        category.setUpdatedAt(Instant.now());
+        category.setCreatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        category.setUpdatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        category.setDeletedAt(null);
+        category.setDeletedBy(null);
 
         uniquenessService.checkUniqueCategory(category); // Check uniqueness
 
@@ -85,6 +94,9 @@ public class CategoryServiceImp implements CategoryService {
 
         Category category = findCategoryById(categoryId);
         category.setCategoryName(categoryName);
+        category.setUpdatedAt(Instant.now());
+        category.setUpdatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+
         return categoryRepository.save(category);
     }
 
@@ -96,6 +108,7 @@ public class CategoryServiceImp implements CategoryService {
             throw new CategoryNotFoundException("Category not found.");
         }
         categoryRepository.deleteById(categoryId);
-
+        optionalCategory.get().setDeletedAt(Instant.now());
+        optionalCategory.get().setDeletedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
     }
 }

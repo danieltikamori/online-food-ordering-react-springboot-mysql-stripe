@@ -4,14 +4,17 @@ import lombok.NonNull;
 import me.amlu.model.IngredientCategory;
 import me.amlu.model.IngredientsItems;
 import me.amlu.model.Restaurant;
+import me.amlu.model.User;
 import me.amlu.repository.IngredientCategoryRepository;
 import me.amlu.repository.IngredientsItemsRepository;
 import me.amlu.service.Exceptions.DuplicateCategoryException;
 import me.amlu.service.Exceptions.DuplicateItemException;
 import me.amlu.service.Exceptions.IngredientCategoryNotFoundException;
 import me.amlu.service.Exceptions.IngredientsItemsNotFoundException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,6 +53,13 @@ public class IngredientsServiceImp implements IngredientsService {
         IngredientCategory ingredientCategory = new IngredientCategory();
         ingredientCategory.setCategoryName(categoryName);
         ingredientCategory.setRestaurant(restaurant);
+        ingredientCategory.setCreatedAt(Instant.now());
+        ingredientCategory.setUpdatedAt(Instant.now());
+        ingredientCategory.setCreatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        ingredientCategory.setUpdatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        ingredientCategory.setDeletedAt(null);
+        ingredientCategory.setDeletedBy(null);
+
 
         uniquenessService.checkUniqueIngredientCategory(ingredientCategory); // Check uniqueness
 
@@ -93,6 +103,12 @@ public class IngredientsServiceImp implements IngredientsService {
         ingredientsItems.setIngredientCategory(ingredientCategory);
         ingredientsItems.setRestaurant(restaurant);
         ingredientsItems.setInStock(true);
+        ingredientsItems.setCreatedAt(Instant.now());
+        ingredientsItems.setUpdatedAt(Instant.now());
+        ingredientsItems.setCreatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        ingredientsItems.setUpdatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        ingredientsItems.setDeletedAt(null);
+        ingredientsItems.setDeletedBy(null);
 
         uniquenessService.checkUniqueIngredientItem(ingredientsItems); // Check uniqueness
         return ingredientsItemsRepository.save(ingredientsItems);
@@ -114,6 +130,9 @@ public class IngredientsServiceImp implements IngredientsService {
         }
         IngredientsItems ingredientsItems = optionalIngredientsItems.get();
         ingredientsItems.setInStock(!ingredientsItems.isInStock());
+        ingredientsItems.setUpdatedAt(Instant.now());
+        ingredientsItems.setUpdatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+
         return ingredientsItemsRepository.save(ingredientsItems);
     }
 
@@ -126,14 +145,19 @@ public class IngredientsServiceImp implements IngredientsService {
     public void deleteIngredientCategory(Long id) throws Exception {
 
         IngredientCategory ingredientCategory = findIngredientCategoryById(id);
-        ingredientCategoryRepository.delete(ingredientCategory);
+//        ingredientCategoryRepository.delete(ingredientCategory);
+        ingredientCategory.setDeletedAt(Instant.now());
+        ingredientCategory.setDeletedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+
     }
 
     @Override
     public void deleteIngredientsItems(Long id) throws Exception {
 
         IngredientsItems ingredientsItems = ingredientsItemsRepository.findById(id).orElseThrow();
-        ingredientsItemsRepository.delete(ingredientsItems);
+//        ingredientsItemsRepository.delete(ingredientsItems);
+        ingredientsItems.setDeletedAt(Instant.now());
+        ingredientsItems.setDeletedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
 
     }
 }

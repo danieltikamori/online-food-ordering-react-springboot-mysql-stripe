@@ -4,18 +4,18 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import me.amlu.dto.FoodDto;
 import me.amlu.dto.IngredientItemDto;
-import me.amlu.model.Category;
-import me.amlu.model.Food;
-import me.amlu.model.IngredientsItems;
-import me.amlu.model.Restaurant;
+import me.amlu.model.*;
 import me.amlu.repository.FoodRepository;
+import me.amlu.repository.UserRepository;
 import me.amlu.request.CreateFoodRequest;
 import me.amlu.service.Exceptions.FoodNotFoundException;
 import me.amlu.service.Exceptions.RestaurantNotFoundException;
 import org.hibernate.Hibernate;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -28,14 +28,16 @@ public class FoodServiceImp implements FoodService {
     private final EntityUniquenessService uniquenessService;
 
     private final FoodRepository foodRepository;
+    final UserRepository userRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
 
 
-    public FoodServiceImp(EntityUniquenessService uniquenessService, FoodRepository foodRepository) {
+    public FoodServiceImp(EntityUniquenessService uniquenessService, FoodRepository foodRepository, UserRepository userRepository) {
         this.uniquenessService = uniquenessService;
         this.foodRepository = foodRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -62,8 +64,11 @@ public class FoodServiceImp implements FoodService {
 
         food.setSeasonal(createFoodRequest.isSeasonal());
         food.setVegetarian(createFoodRequest.isVegetarian());
-        food.setCreationDate(new Date());
-        food.setUpdateDate(new Date());
+        food.setCreatedAt(Instant.now());
+        food.setUpdatedAt(Instant.now());
+        food.setCreatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        food.setUpdatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+
 
         uniquenessService.checkUniqueFood(food); // Check if food name already exists
         Food savedFood = foodRepository.save(food);
@@ -73,10 +78,16 @@ public class FoodServiceImp implements FoodService {
     }
 
     @Override
-    public void deleteFood(Long foodId) throws Exception {
+    public void deleteFood(Long foodId, Restaurant restaurant, Long userId) throws Exception {
+        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 
         Food food = findFoodById(foodId);
         food.setRestaurant(null);
+        food.setFoodCategory(null);
+        food.setIngredients(null);
+        food.setDeletedAt(Instant.now());
+        food.setDeletedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+
 
 //        foodRepository.delete(food);
         foodRepository.save(food);
@@ -181,6 +192,8 @@ public class FoodServiceImp implements FoodService {
 
         Food food = findFoodById(foodId);
         food.setAvailable(!food.isAvailable());
+        food.setUpdatedAt(Instant.now());
+        food.setUpdatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
 
         return foodRepository.save(food);
     }

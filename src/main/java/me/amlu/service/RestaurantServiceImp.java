@@ -12,12 +12,14 @@ import me.amlu.request.CreateRestaurantRequest;
 import me.amlu.service.Exceptions.RestaurantNotFoundException;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class RestaurantServiceImp implements RestaurantService {
@@ -46,8 +48,11 @@ public class RestaurantServiceImp implements RestaurantService {
             restaurant.setContactInformation(restaurantRequest.getContactInformation());
             restaurant.setOpeningHours(restaurantRequest.getOpeningHours());
             restaurant.setImages(restaurantRequest.getImages());
-            restaurant.setRegistrationDate(LocalDateTime.now());
-            restaurant.setUpdateDate(LocalDateTime.now());
+            restaurant.setCreatedAt(Instant.now());
+            restaurant.setUpdatedAt(Instant.now());
+            restaurant.setCreatedBy(user);
+            restaurant.setUpdatedBy(user);
+
 
             return restaurantRepository.save(restaurant);
         } catch (ConstraintViolationException e) {
@@ -99,6 +104,10 @@ public class RestaurantServiceImp implements RestaurantService {
 //            restaurant.setRestaurantName(updatedRestaurant.getRestaurantName());
 //        }
 
+        restaurant.setUpdatedAt(Instant.now());
+        restaurant.setUpdatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+
+
         return restaurantRepository.save(restaurant);
     }
 
@@ -108,6 +117,9 @@ public class RestaurantServiceImp implements RestaurantService {
 
         Restaurant restaurant = findRestaurantById(restaurantId);
         restaurant.setOpenNow(!restaurant.isOpenNow());
+        restaurant.setUpdatedAt(Instant.now());
+        restaurant.setUpdatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+
         return restaurantRepository.save(restaurant);
     }
 
@@ -117,11 +129,8 @@ public class RestaurantServiceImp implements RestaurantService {
         Optional<Restaurant> optionalRestaurant = restaurantRepository.findById(restaurantId);
         Restaurant restaurant = optionalRestaurant.orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found with ID: " + restaurantId));
 
-//        Restaurant restaurant = findRestaurantById(restaurantId);
-//
-//        if (restaurant == null) {
-//            throw new RestaurantNotFoundException("Restaurant not found with ID: " + restaurantId);
-//        }
+        restaurant.setDeletedAt(Instant.now());
+        restaurant.setDeletedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
 
         restaurantRepository.delete(restaurant);
     }
@@ -145,7 +154,11 @@ public class RestaurantServiceImp implements RestaurantService {
 
     @Override
     public List<Restaurant> searchRestaurant(String keyword) {
-        return restaurantRepository.findBySearchQuery(keyword);
+
+        return restaurantRepository.findBySearchQuery(keyword)
+                .stream()
+                .filter(restaurant -> restaurant.getDeletedAt() == null) // Filter out deleted restaurants
+                .collect(Collectors.toList());
     }
 
     @Override

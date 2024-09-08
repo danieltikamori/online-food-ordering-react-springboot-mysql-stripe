@@ -1,5 +1,6 @@
 package me.amlu.service;
 
+import lombok.NonNull;
 import me.amlu.model.Order;
 import me.amlu.model.User;
 import me.amlu.request.OrderRequest;
@@ -8,7 +9,7 @@ import java.util.List;
 
 public interface OrderService {
 
-    Order createOrder(OrderRequest order, User user) throws Exception;
+    Order createOrder(@NonNull OrderRequest order, User user) throws Exception;
 
     Order updateOrder(Long orderId, String orderStatus) throws Exception;
 
