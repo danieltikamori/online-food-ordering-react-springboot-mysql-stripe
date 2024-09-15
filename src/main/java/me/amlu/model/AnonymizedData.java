@@ -1,18 +1,18 @@
 package me.amlu.model;
 
+import jakarta.persistence.EntityListeners;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
-import me.amlu.dto.FoodDto;
 import me.amlu.dto.RestaurantDto;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.util.List;
-
+@EntityListeners(AuditingEntityListener.class)
 @Data
 @AllArgsConstructor
 @RequiredArgsConstructor
 public class AnonymizedData {
-    // Define the properties and methods of the class
 
     User user;
     private String name;

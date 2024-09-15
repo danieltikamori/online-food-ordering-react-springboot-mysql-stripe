@@ -1,8 +1,9 @@
 package me.amlu.repository;
 
+import lombok.NonNull;
 import me.amlu.model.CartItem;
-import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface CartItemRepository extends JpaRepository<CartItem, Long> {
+public interface CartItemRepository extends BaseRepository<CartItem, Long> {
 
+    void deleteByCartCustomerIdAndCartDeletedAtIsNull(@NonNull Long customerId);
 }

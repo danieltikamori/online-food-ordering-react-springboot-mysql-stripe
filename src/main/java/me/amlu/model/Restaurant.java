@@ -2,26 +2,40 @@ package me.amlu.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.proxy.HibernateProxy;
-
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.*;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.SoftDelete;
+import org.hibernate.proxy.HibernateProxy;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.time.Instant;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+
+import static me.amlu.common.SecurityUtil.getAuthenticatedUser;
 
 @Getter
 @Setter
 @ToString
 @RequiredArgsConstructor
 @Entity
-@Cacheable(true) @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+@EntityListeners(AuditingEntityListener.class)
+@SoftDelete
+@FilterDef(name = "deletedFilter", defaultCondition = "deleted_at IS NULL")
+@Filter(name = "deletedFilter")
+@Table(indexes = @Index(name = "cuisine_deleted_at_index", columnList = "cuisine_type, deleted_at"), uniqueConstraints = @UniqueConstraint(columnNames = {"owner_id"}))
+@Cacheable
+@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 @AllArgsConstructor
 public class Restaurant {
 
@@ -29,10 +43,14 @@ public class Restaurant {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
+    @Version
+    @Column(name = "u_lmod", columnDefinition = "unsigned bigint DEFAULT 0", nullable = false)
+    private Long version = 0L;
+
     @OneToOne
     private User owner;
 
-    @Column(nullable = false, length = 255)
+    @Column(nullable = false)
     @NotNull
     @NotBlank
     @Size(max = 255)
@@ -52,7 +70,7 @@ public class Restaurant {
     @Embedded
     private ContactInformation contactInformation;
 
-    @Column(length = 255)
+    @Column(nullable = true)
     @Size(max = 255)
     private String openingHours;
 
@@ -72,26 +90,37 @@ public class Restaurant {
     @ToString.Exclude
     private List<Food> foods = new ArrayList<>();
 
-    @Column(nullable = false, name = "created_at", updatable = false, columnDefinition = "DATETIME ZONE='UTC'")
+    @PreRemove
+    private void preRemove() {
+        this.deletedAt = Instant.now();
+        this.deletedBy = getAuthenticatedUser();
+    }
+
+    @CreatedDate
     @NotNull
     @NotBlank
+    @Column(nullable = false, name = "created_at", updatable = false, columnDefinition = "DATETIME ZONE='UTC'")
     private Instant createdAt;
 
-    @Column(nullable = false, name = "created_by", updatable = false)
+    @CreatedBy
     @NotNull
     @NotBlank
+    @Column(nullable = false, name = "created_by", updatable = false)
     private User createdBy;
 
-    @Column(nullable = false, name = "updated_at", columnDefinition = "DATETIME ZONE='UTC'")
+    @LastModifiedDate
     @NotNull
     @NotBlank
+    @Column(nullable = false, name = "updated_at", columnDefinition = "DATETIME ZONE='UTC'")
     private Instant updatedAt;
 
-    @Column(nullable = false, name = "updated_by")
+    @LastModifiedBy
     @NotNull
     @NotBlank
+    @Column(nullable = false, name = "updated_by")
     private User updatedBy;
 
+    @SoftDelete
     @Column(nullable = true, name = "deleted_at", columnDefinition = "DATETIME ZONE='UTC'")
     private Instant deletedAt;
 
