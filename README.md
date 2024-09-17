@@ -1,6 +1,47 @@
-# Online Food Ordering Application
+# TikaFoods - Multi-vendor Online Food Ordering Application
 
 ## Overview
+
+Multivendor(multiple restaurants) food ordering application. It allows users to order food from multiple restaurants.
+Frontend is built with React and backend is built with Spring Boot. Plan to deploy it on AWS EKS(Kubernetes) using IaC and automated CI/CD pipeline.
+
+Currently, using MySQL as a database, plan to be able to use PostgreSQL (known as Postgres) as well.
+
+Plan to create a version using microservices architecture.
+
+## Motivation
+
+To be a reference project for Spring Boot and React, using MySQL as a database (PostgreSQL will also be supported).
+Initially using Terraform to manage the infrastructure on AWS and CI/CD with GitHub Actions, Jenkins, SonarQube, Snyk,
+ArgoCD, Prometheus, Grafana, Elasticsearch, Kibana, Logstash, etc.
+
+Java using the power of Spring Boot, Java 21 version features, Native Image, GraalVM, etc.
+
+Also implement a notification system to send notifications to Slack and email.
+
+## Requirements
+
+- Java 21 Graal VM
+- MySQL
+- Postgres
+- Kubernetes
+- GitHub Actions
+- Jenkins
+- SonarQube
+- Snyk
+- ArgoCD
+- Prometheus
+- Grafana
+- Elasticsearch
+- Kibana
+- Logstash
+- AWS EKS
+- React
+
+
+## API testing
+
+### Testing POST /api/v1/restaurant
 
 #### Creating Restaurant
 
@@ -29,6 +70,17 @@
         "https://cdn.pixabay.com/photo/2024/05/02/18/08/rolls-8735316_960_720.jpg"]
 }
 ```
+
+## Usage
+
+## Contributing
+
+You are welcome to contribute. See LICENSE for details.
+
+## License
+
+See [LICENSE](LICENSE).
+
 ## TODOs:
 
 
@@ -85,3 +137,48 @@ Log Errors Securely: Log errors appropriately, but avoid logging sensitive data.
 
 
    The current implementation is functional and likely performs well for a reasonable number of ingredient categories. We can further optimize it with indexing and potentially caching. The choice to use caching depends on specific performance needs and willingness to manage the added complexity.
+   
+### Admin Panel
+
+Building an admin panel for the owner of the online food ordering application is a great way to provide control and insights into the business.
+Here's a breakdown of key features and considerations for the admin panel:
+
+1. Authentication and Authorization
+   Secure Login: Implement a robust authentication system (e.g., Spring Security) to protect the admin panel from unauthorized access.
+   Role-Based Access Control (RBAC): Define different roles (e.g., owner, manager, staff) and restrict access to features and data based on roles.
+2. Dashboard
+   Key Metrics: Display important metrics like total orders, revenue, average order value, new customers, and top-selling items.
+   Visualizations: Use charts and graphs to present data in an easy-to-understand format.
+   Real-time Updates: Consider using technologies like WebSockets to provide near real-time updates on orders and other activities.
+3. Restaurant Management
+   CRUD Operations: Allow the owner to create, read, update, and delete (CRUD) restaurants, including details like name, address, cuisine, opening hours, and contact information.
+   Menu Management: Enable the owner to manage the menu for each restaurant, including adding, editing, and removing food items, categories, prices, and images.
+   Order Management: Provide a comprehensive view of orders for each restaurant, including order details, customer information, order status, and payment status.
+4. User Management
+   Customer Management: View and manage customer accounts, including their order history, addresses, and payment methods.
+   Staff Management: Allow the owner to add, edit, and remove staff members for their restaurants, assigning roles and permissions.
+5. Reporting and Analytics
+   Sales Reports: Generate reports on sales by day, week, month, or custom date ranges.
+   Product Performance: Analyze the performance of individual food items and categories.
+   Customer Insights: Gain insights into customer behavior, such as average order value, order frequency, and popular items.
+6. Settings and Configuration
+   Payment Gateway Integration: Allow the owner to configure payment gateway settings (e.g., Stripe API keys).
+   Delivery Zones: Define delivery zones and associated fees.
+   Email Templates: Customize email templates for order confirmations, notifications, and marketing campaigns.
+   Technology Stack
+   Frontend: React is a great choice for building a dynamic and interactive admin panel.
+   Backend: Spring Boot provides a robust framework for building RESTful APIs to handle data interactions.
+   Database: MySQL is a suitable relational database for storing your application data.
+   Payment Gateway: Stripe is a popular and reliable payment gateway for online businesses.
+   Additional Considerations
+   User Experience (UX): Design a clean, intuitive, and user-friendly interface for the admin panel.
+   Security: Implement appropriate security measures to protect sensitive data.
+   Scalability: Consider the future growth of your application and design the admin panel to be scalable.
+  
+7. Getting Started
+   1. Plan Your Features: Create a detailed list of features and prioritize them based on importance.
+   2. Design the UI: Sketch out the user interface for the admin panel, considering user flow and information architecture.
+   3. Build the Backend APIs: Develop RESTful APIs using Spring Boot to expose the necessary data and functionality to the frontend.
+   4. Develop the Frontend: Use React to build the user interface and interact with the backend APIs.
+   5. Test Thoroughly: Conduct thorough testing to ensure the admin panel is functional, secure, and user-friendly.
+   Remember to break down the project into smaller, manageable tasks and iterate on your development process. Good luck with building your admin panel!

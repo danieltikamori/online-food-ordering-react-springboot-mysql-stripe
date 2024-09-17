@@ -2,19 +2,34 @@ package me.amlu.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.*;
-import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.proxy.HibernateProxy;
-
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
+import lombok.*;
+import org.hibernate.annotations.CacheConcurrencyStrategy;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.SoftDelete;
+import org.hibernate.proxy.HibernateProxy;
+import org.springframework.data.annotation.CreatedBy;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
 import java.util.Objects;
 
+import static me.amlu.common.SecurityUtil.getAuthenticatedUser;
+
 @Entity
-@Cacheable(true) @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
+@EntityListeners(AuditingEntityListener.class)
+@SoftDelete
+@FilterDef(name = "deletedFilter", defaultCondition = "deleted_at IS NULL")
+@Filter(name = "deletedFilter")
+@Table(indexes = @Index(name = "category_deleted_at_index", columnList = "category_name, deleted_at"), uniqueConstraints = @UniqueConstraint(columnNames = {"restaurant_id", "category_name"}))
+@Cacheable
+@org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 @Getter
 @Setter
 @ToString
@@ -26,38 +41,51 @@ public class Category {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
 
-    // Possibly may need add unique = true
+    @Version
+    @Column(name = "u_lmod", columnDefinition = "unsigned integer DEFAULT 0", nullable = false)
+    private Integer version = 0;
 
     @Column(nullable = false)
     @NotBlank(message = "Category name cannot be blank.")
     @NotNull
-    @Size(max = 255)
+    @Size(max = 127)
     private String categoryName;
 
     @JsonIgnore
     @ManyToOne
     private Restaurant restaurant;
 
-    @Column(nullable = false, name = "created_at", updatable = false, columnDefinition = "DATETIME ZONE='UTC'")
+    @PreRemove
+    private void preRemove() {
+        this.deletedAt = Instant.now();
+        this.deletedBy = getAuthenticatedUser();
+    }
+
+    @CreatedDate
     @NotNull
     @NotBlank
+    @Column(nullable = false, name = "created_at", updatable = false, columnDefinition = "DATETIME ZONE='UTC'")
     private Instant createdAt;
 
-    @Column(nullable = false, name = "created_by", updatable = false)
+    @CreatedBy
     @NotNull
     @NotBlank
+    @Column(nullable = false, name = "created_by", updatable = false)
     private User createdBy;
 
-    @Column(nullable = false, name = "updated_at", columnDefinition = "DATETIME ZONE='UTC'")
+    @LastModifiedDate
     @NotNull
     @NotBlank
+    @Column(nullable = false, name = "updated_at", columnDefinition = "DATETIME ZONE='UTC'")
     private Instant updatedAt;
 
-    @Column(nullable = false, name = "updated_by")
+    @LastModifiedBy
     @NotNull
     @NotBlank
+    @Column(nullable = false, name = "updated_by")
     private User updatedBy;
 
+    @SoftDelete
     @Column(nullable = true, name = "deleted_at", columnDefinition = "DATETIME ZONE='UTC'")
     private Instant deletedAt;
 
@@ -68,6 +96,7 @@ public class Category {
     public boolean hasSameCategoryName(Category other) {
         return categoryName.equalsIgnoreCase(other.categoryName);
     }
+
     @Override
     public final boolean equals(Object o) {
         if (this == o) return true;
