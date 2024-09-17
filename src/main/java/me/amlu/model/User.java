@@ -1,18 +1,25 @@
+/*
+ * Copyright (c) 2024 Daniel Itiro Tikamori. All rights reserved.
+ */
+
 package me.amlu.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.i18n.phonenumbers.Phonenumber;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
+import jakarta.validation.constraints.*;
 import lombok.*;
+import me.amlu.config.SensitiveData;
+import me.amlu.config.StrongPassword;
 import me.amlu.dto.RestaurantDto;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.proxy.HibernateProxy;
+import org.joou.UInteger;
+import org.joou.ULong;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
@@ -30,8 +37,9 @@ import static me.amlu.common.SecurityUtil.getAuthenticatedUser;
 @EntityListeners(AuditingEntityListener.class)
 @SoftDelete
 @FilterDef(name = "deletedFilter", defaultCondition = "deleted_at IS NULL")
-@Filter(name = "deletedFilter")
-@Table(indexes = @Index(name = "email_deleted_at_index", columnList = "email, deleted_at"), uniqueConstraints = @UniqueConstraint(columnNames = {"email"}))
+@FilterDef(name = "adminFilter", defaultCondition = "1=1")
+@Table(indexes = @Index(name = "email_deleted_at_index", columnList = "email, deleted_at"),
+        uniqueConstraints = @UniqueConstraint(columnNames = {"email", "idempotency_key"}))
 @Cacheable
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @Getter
@@ -43,38 +51,45 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id;
+    private Long user_id;
 
     @Version
-    @Column(name = "u_lmod", columnDefinition = "unsigned integer DEFAULT 0", nullable = false)
-    private Integer version = 0;
+    @Column(name = "u_lmod", columnDefinition = "unsigned bigint DEFAULT 0", nullable = false)
+    private ULong version = ULong.valueOf(0);
+
+
+    @Column(name = "idempotency_key", nullable = false, unique = true)
+    private String idempotencyKey;
 
     @Column(nullable = false)
-    @NotNull
-    @NotBlank
+    @NotEmpty
     @Size(max = 255)
     private String fullName;
 
+    @Email
     @Column(nullable = false, unique = true)
-    @NotNull
-    @NotBlank
+    @NotEmpty
     @Size(max = 255)
     private String email;
 
     // To avoid password leakage, we will use the JsonProperty annotation as write-only.
-//    @StrongPassword
+    @StrongPassword
     @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(nullable = false)
-    @NotNull
-    @NotBlank
+    @NotEmpty
     @Size(min = 8, max = 255, message = "Password must be between 8 and 255 characters")
     private String password;
 
+    @NotEmpty
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    @SensitiveData(rolesAllowed = {"ADMIN", "CUSTOMER"})
+    @Column(nullable = false)
+    private Phonenumber.PhoneNumber phoneNumber;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    @NotNull
-    @NotBlank
-    private USER_ROLE role = USER_ROLE.ROLE_CUSTOMER;
+    @NotEmpty
+    private UserRole role = UserRole.ROLE_CUSTOMER;
 
     @JsonIgnore
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "customer")
@@ -82,6 +97,8 @@ public class User {
     private List<Order> orders = new ArrayList<>();
 
     @ElementCollection
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
     private List<RestaurantDto> favoriteRestaurants = new ArrayList<>();
 
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
@@ -96,51 +113,56 @@ public class User {
     }
 
     @CreatedDate
-    @NotNull
-    @NotBlank
+    @NotEmpty
     @Column(nullable = false, name = "created_at", updatable = false, columnDefinition = "DATETIME ZONE='UTC'")
     private Instant createdAt;
 
     @CreatedBy
-    @NotNull
-    @NotBlank
-    @Column(nullable = false, name = "created_by", updatable = false)
+    @NotEmpty
+    @ManyToOne
+    @JoinColumn(nullable = false, name = "created_by_id", updatable = false)
     private User createdBy;
 
     @LastModifiedDate
-    @NotNull
-    @NotBlank
+    @NotEmpty
     @Column(nullable = false, name = "updated_at", columnDefinition = "DATETIME ZONE='UTC'")
     private Instant updatedAt;
 
     @LastModifiedBy
-    @NotNull
-    @NotBlank
-    @Column(nullable = false, name = "updated_by")
+    @NotEmpty
+    @ManyToOne
+    @JoinColumn(nullable = false, name = "updated_by_id")
     private User updatedBy;
 
     @SoftDelete
+    @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
     @Column(nullable = true, name = "deleted_at", columnDefinition = "DATETIME ZONE='UTC'")
     private Instant deletedAt;
 
+    @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
     @ManyToOne
     @JoinColumn(nullable = true, name = "deleted_by_id")
     private User deletedBy;
 
+    @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
     @Column(nullable = true, name = "anonymized_at", columnDefinition = "DATETIME ZONE='UTC'")
     private Instant anonymizedAt;
 
+    @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
     @ManyToOne
     @JoinColumn(nullable = true, name = "anonymized_by_id")
     private User anonymizedBy;
 
+    @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
     @Column(nullable = true, name = "anonymized_data_exported_at", columnDefinition = "DATETIME ZONE='UTC'")
     private Instant anonymizedDataExportedAt;
 
+    @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
     @ManyToOne
     @JoinColumn(nullable = false, name = "is_anonymized_data_exported")
     private boolean isAnonymizedDataExported;
 
+    @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
     @Column(nullable = true, name = "anonymized_data_exported_key")
     private String anonymizedDataExportedKey;
 
@@ -158,7 +180,7 @@ public class User {
             return false;
         }
         User user = (User) o;
-        return getId() != null && Objects.equals(getId(), user.getId());
+        return getUser_id() != null && Objects.equals(getUser_id(), user.getUser_id());
     }
 
     @Override

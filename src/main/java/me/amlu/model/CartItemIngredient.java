@@ -1,14 +1,20 @@
+/*
+ * Copyright (c) 2024 Daniel Itiro Tikamori. All rights reserved.
+ */
+
 package me.amlu.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import me.amlu.config.SensitiveData;
 import me.amlu.dto.IngredientItemDto;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.SoftDelete;
+import org.joou.UInteger;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
@@ -24,8 +30,8 @@ import static me.amlu.common.SecurityUtil.getAuthenticatedUser;
 @EntityListeners(AuditingEntityListener.class)
 @SoftDelete
 @FilterDef(name = "deletedFilter", defaultCondition = "deleted_at IS NULL")
-@Filter(name = "deletedFilter")
-@Table(indexes = @Index(name = "cart_item_ingredient_deleted_at_index", columnList = "cart_item_id, deleted_at"))
+@FilterDef(name = "adminFilter", defaultCondition = "1=1")
+@Table(indexes = @Index(name = "cart_item_ingredient_deleted_at_index", columnList = "cart_item_id, deleted_at"), uniqueConstraints = @UniqueConstraint(columnNames = {"cart_item_id", "idempotency_key"}))
 @Cacheable
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @Getter
@@ -36,13 +42,17 @@ import static me.amlu.common.SecurityUtil.getAuthenticatedUser;
 public class CartItemIngredient {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id;
+    private Long cart_item_ingredient_id;
 
     @Version
     @Column(name = "u_lmod", columnDefinition = "unsigned integer DEFAULT 0", nullable = false)
-    private Integer version = 0;
+    private UInteger version = UInteger.valueOf(0);
+
+    @Column(name = "idempotency_key", nullable = false, unique = true)
+    private String idempotencyKey;
 
     @ManyToOne
+    @JoinColumn(name = "cart_item_id", nullable = false)
     private CartItem cartItem;
 
     @Embedded // Or use appropriate mapping for IngredientItemDto
@@ -56,33 +66,37 @@ public class CartItemIngredient {
 
     @CreatedDate
     @NotNull
-    @NotBlank
+    @NotEmpty
     @Column(nullable = false, name = "created_at", updatable = false, columnDefinition = "DATETIME ZONE='UTC'")
     private Instant createdAt;
 
     @CreatedBy
     @NotNull
-    @NotBlank
-    @Column(nullable = false, name = "created_by", updatable = false)
+    @NotEmpty
+    @ManyToOne
+    @JoinColumn(nullable = false, name = "created_by_id", updatable = false)
     private User createdBy;
 
     @LastModifiedDate
     @NotNull
-    @NotBlank
+    @NotEmpty
     @Column(nullable = false, name = "updated_at", columnDefinition = "DATETIME ZONE='UTC'")
     private Instant updatedAt;
 
     @LastModifiedBy
     @NotNull
-    @NotBlank
-    @Column(nullable = false, name = "updated_by")
+    @NotEmpty
+    @ManyToOne
+    @JoinColumn(nullable = false, name = "updated_by_id")
     private User updatedBy;
 
     @SoftDelete
+    @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
     @Column(nullable = true, name = "deleted_at", columnDefinition = "DATETIME ZONE='UTC'")
     private Instant deletedAt;
 
     @ManyToOne
+    @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
     @JoinColumn(nullable = true, name = "deleted_by_id")
     private User deletedBy;
 

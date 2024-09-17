@@ -1,11 +1,18 @@
+/*
+ * Copyright (c) 2024 Daniel Itiro Tikamori. All rights reserved.
+ */
+
 package me.amlu.model;
 
+import com.google.i18n.phonenumbers.Phonenumber;
 import jakarta.persistence.Column;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import jakarta.validation.constraints.Size;
+import me.amlu.config.Phone;
 
 
 @Data
@@ -13,23 +20,28 @@ import jakarta.validation.constraints.Size;
 @AllArgsConstructor
 public class ContactInformation {
 
-    @Column(length = 255)
+    @Email
+    @NotEmpty
+    @Column(nullable = false)
     @Size(max = 255)
     private String email;
 
-    @Column(length = 255)
-    @Size(max = 255)
-    private String mobile;
+    @Phone
+    @NotEmpty
+    @Column(nullable = false)
+    @Size(max = 31)
+    private Phonenumber.PhoneNumber phoneNumber;
 
-    @Column(length = 255)
+    @Phone
+    @Size(max = 31)
+    private Phonenumber.PhoneNumber mobile;
+
     @Size(max = 255)
     private String website;
 
-    @Column(length = 255)
     @Size(max = 255)
     private String twitter;
 
-    @Column(length = 255)
     @Size(max = 255)
     private String instagram;
 }

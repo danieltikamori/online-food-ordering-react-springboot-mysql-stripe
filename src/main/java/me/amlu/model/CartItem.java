@@ -1,14 +1,20 @@
+/*
+ * Copyright (c) 2024 Daniel Itiro Tikamori. All rights reserved.
+ */
+
 package me.amlu.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
+import me.amlu.config.SensitiveData;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.proxy.HibernateProxy;
+import org.joou.UInteger;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
@@ -16,7 +22,10 @@ import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
-import java.util.*;
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Objects;
+import java.util.Set;
 
 import static me.amlu.common.SecurityUtil.getAuthenticatedUser;
 
@@ -24,7 +33,9 @@ import static me.amlu.common.SecurityUtil.getAuthenticatedUser;
 @EntityListeners(AuditingEntityListener.class)
 @SoftDelete
 @FilterDef(name = "deletedFilter", defaultCondition = "deleted_at IS NULL")
-@Table(indexes = @Index(name = "cart_deleted_at_index", columnList = "cart_id, deleted_at"))
+@FilterDef(name = "adminFilter", defaultCondition = "1=1")
+@Table(indexes = @Index(name = "cart_deleted_at_index", columnList = "cart_id, deleted_at"),
+        uniqueConstraints = @UniqueConstraint(columnNames = {"cart_id", "idempotency_key"}))
 @Cacheable
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @Getter
@@ -36,11 +47,14 @@ public class CartItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id;
+    private Long cart_item_id;
 
     @Version
     @Column(name = "u_lmod", columnDefinition = "unsigned integer DEFAULT 0", nullable = false)
-    private Integer version = 0;
+    private UInteger version = UInteger.valueOf(0);
+
+    @Column(name = "idempotency_key", nullable = false, unique = true)
+    private String idempotencyKey;
 
     @JsonIgnore
     @ManyToOne
@@ -49,13 +63,14 @@ public class CartItem {
 
     @ManyToOne
     @Filter(name = "deletedFilter")
+    @JoinColumn(name = "food_id")
     private Food food;
 
     @Min(1)
     @Max(63)
     @Column(nullable = false)
     @NotNull
-    @NotBlank
+    @NotEmpty
     @Size(max = 63)
     private int quantity;
 
@@ -80,32 +95,36 @@ public class CartItem {
 
     @CreatedDate
     @NotNull
-    @NotBlank
+    @NotEmpty
     @Column(nullable = false, name = "created_at", updatable = false, columnDefinition = "DATETIME ZONE='UTC'")
     private Instant createdAt;
 
     @CreatedBy
     @NotNull
-    @NotBlank
-    @Column(nullable = false, name = "created_by", updatable = false)
+    @NotEmpty
+    @ManyToOne
+    @JoinColumn(nullable = false, name = "created_by_id", updatable = false)
     private User createdBy;
 
     @LastModifiedDate
     @NotNull
-    @NotBlank
+    @NotEmpty
     @Column(nullable = false, name = "updated_at", columnDefinition = "DATETIME ZONE='UTC'")
     private Instant updatedAt;
 
     @LastModifiedBy
     @NotNull
-    @NotBlank
-    @Column(nullable = false, name = "updated_by")
+    @NotEmpty
+    @ManyToOne
+    @JoinColumn(nullable = false, name = "updated_by_id")
     private User updatedBy;
 
     @SoftDelete
+    @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
     @Column(nullable = true, name = "deleted_at", columnDefinition = "DATETIME ZONE='UTC'")
     private Instant deletedAt;
 
+    @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
     @ManyToOne
     @JoinColumn(nullable = true, name = "deleted_by_id")
     private User deletedBy;
@@ -124,7 +143,7 @@ public class CartItem {
             return false;
         }
         CartItem cartItem = (CartItem) o;
-        return getId() != null && Objects.equals(getId(), cartItem.getId());
+        return getCart_item_id() != null && Objects.equals(getCart_item_id(), cartItem.getCart_item_id());
     }
 
     @Override

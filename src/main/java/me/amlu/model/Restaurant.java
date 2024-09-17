@@ -1,16 +1,21 @@
+/*
+ * Copyright (c) 2024 Daniel Itiro Tikamori. All rights reserved.
+ */
+
 package me.amlu.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import me.amlu.config.SensitiveData;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.proxy.HibernateProxy;
+import org.joou.ULong;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
@@ -32,8 +37,9 @@ import static me.amlu.common.SecurityUtil.getAuthenticatedUser;
 @EntityListeners(AuditingEntityListener.class)
 @SoftDelete
 @FilterDef(name = "deletedFilter", defaultCondition = "deleted_at IS NULL")
-@Filter(name = "deletedFilter")
-@Table(indexes = @Index(name = "cuisine_deleted_at_index", columnList = "cuisine_type, deleted_at"), uniqueConstraints = @UniqueConstraint(columnNames = {"owner_id"}))
+@FilterDef(name = "adminFilter", defaultCondition = "1=1")
+@Table(indexes = @Index(name = "cuisine_deleted_at_index", columnList = "cuisine_type, deleted_at"),
+        uniqueConstraints = @UniqueConstraint(columnNames = {"owner_id", "restaurant_name", "idempotency_key"}))
 @Cacheable
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 @AllArgsConstructor
@@ -41,18 +47,20 @@ public class Restaurant {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id;
+    private Long restaurant_id;
 
     @Version
     @Column(name = "u_lmod", columnDefinition = "unsigned bigint DEFAULT 0", nullable = false)
-    private Long version = 0L;
+    private ULong version = ULong.valueOf(0L);
+
+    @Column(name = "idempotency_key", nullable = false, unique = true)
+    private String idempotencyKey;
 
     @OneToOne
     private User owner;
 
     @Column(nullable = false)
-    @NotNull
-    @NotBlank
+    @NotEmpty(message = "Restaurant name cannot be blank.")
     @Size(max = 255)
     private String restaurantName;
 
@@ -64,13 +72,17 @@ public class Restaurant {
     @Size(max = 63)
     private String cuisineType;
 
-    @OneToOne
+    @NotEmpty
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude // Originally OneToOne
     private Address address;
 
+    @NotEmpty
     @Embedded
     private ContactInformation contactInformation;
 
-    @Column(nullable = true)
+    @NotEmpty
+    @Column(nullable = false)
     @Size(max = 255)
     private String openingHours;
 
@@ -78,11 +90,17 @@ public class Restaurant {
     @ToString.Exclude
     private List<Order> orders = new ArrayList<>();
 
+    @NotEmpty
+    @Size(max = 8191)
     @ElementCollection
     @Column(length = 8191)
     @Size(max = 8191)
+    @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
     private List<String> images;
 
+    @Column(nullable = false)
+    @NotEmpty
     private boolean openNow = true;
 
     @JsonIgnore
@@ -97,52 +115,56 @@ public class Restaurant {
     }
 
     @CreatedDate
-    @NotNull
-    @NotBlank
+    @NotEmpty
     @Column(nullable = false, name = "created_at", updatable = false, columnDefinition = "DATETIME ZONE='UTC'")
     private Instant createdAt;
 
     @CreatedBy
-    @NotNull
-    @NotBlank
-    @Column(nullable = false, name = "created_by", updatable = false)
+    @NotEmpty
+    @ManyToOne
+    @JoinColumn(nullable = false, name = "created_by_id", updatable = false)
     private User createdBy;
 
     @LastModifiedDate
-    @NotNull
-    @NotBlank
+    @NotEmpty
     @Column(nullable = false, name = "updated_at", columnDefinition = "DATETIME ZONE='UTC'")
     private Instant updatedAt;
 
     @LastModifiedBy
-    @NotNull
-    @NotBlank
-    @Column(nullable = false, name = "updated_by")
+    @NotEmpty
+    @ManyToOne
+    @JoinColumn(nullable = false, name = "updated_by_id")
     private User updatedBy;
 
     @SoftDelete
+    @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
     @Column(nullable = true, name = "deleted_at", columnDefinition = "DATETIME ZONE='UTC'")
     private Instant deletedAt;
 
+    @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
     @ManyToOne
     @JoinColumn(nullable = true, name = "deleted_by_id")
     private User deletedBy;
 
+    @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
     @Column(nullable = true, name = "anonymized_at", columnDefinition = "DATETIME ZONE='UTC'")
     private Instant anonymizedAt;
 
+    @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
     @ManyToOne
     @JoinColumn(nullable = true, name = "anonymized_by_id")
     private User anonymizedBy;
 
+    @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
     @Column(nullable = true, name = "anonymized_data_exported_at", columnDefinition = "DATETIME ZONE='UTC'")
     private Instant anonymizedDataExportedAt;
 
+    @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
     @ManyToOne
     @JoinColumn(nullable = false, name = "is_anonymized_data_exported")
     private boolean isAnonymizedDataExported;
 
-
+    @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
     @Column(nullable = true, name = "anonymized_data_exported_key")
     private String AnonymizedDataExportedKey;
 
@@ -154,7 +176,7 @@ public class Restaurant {
         Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
         if (thisEffectiveClass != oEffectiveClass) return false;
         Restaurant that = (Restaurant) o;
-        return getId() != null && Objects.equals(getId(), that.getId());
+        return getRestaurant_id() != null && Objects.equals(getRestaurant_id(), that.getRestaurant_id());
     }
 
     @Override

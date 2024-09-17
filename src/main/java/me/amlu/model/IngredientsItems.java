@@ -1,16 +1,22 @@
+/*
+ * Copyright (c) 2024 Daniel Itiro Tikamori. All rights reserved.
+ */
+
 package me.amlu.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.*;
+import me.amlu.config.SensitiveData;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
 import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.proxy.HibernateProxy;
+import org.joou.ULong;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
@@ -26,8 +32,9 @@ import static me.amlu.common.SecurityUtil.getAuthenticatedUser;
 @EntityListeners(AuditingEntityListener.class)
 @SoftDelete
 @FilterDef(name = "deletedFilter", defaultCondition = "deleted_at IS NULL")
-@Filter(name = "deletedFilter")
-@Table(indexes = @Index(name = "restaurant_deleted_at_index", columnList = "restaurant_id, deleted_at"), uniqueConstraints = @UniqueConstraint(columnNames = {"restaurant_id", "ingredient_name", "category_name"}))
+@FilterDef(name = "adminFilter", defaultCondition = "1=1")
+@Table(indexes = @Index(name = "restaurant_deleted_at_index", columnList = "restaurant_id, deleted_at"),
+        uniqueConstraints = @UniqueConstraint(columnNames = {"restaurant_id", "ingredient_name", "category_name", "idempotency_key"}))
 @Cacheable
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 @Getter
@@ -39,23 +46,28 @@ public class IngredientsItems {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id;
+    private Long ingredients_items_id;
 
     @Version
     @Column(name = "u_lmod", columnDefinition = "unsigned bigint DEFAULT 0", nullable = false)
-    private Long version = 0L;
+    private ULong version = ULong.valueOf(0L);
+
+    @Column(name = "idempotency_key", nullable = false, unique = true)
+    private String idempotencyKey;
 
     @Column(nullable = false, length = 127)
     @NotNull
-    @NotBlank(message = "Ingredient name cannot be blank.")
+    @NotEmpty(message = "Ingredient name cannot be blank.")
     @Size(max = 127)
     private String ingredientName;
 
     @ManyToOne
+    @JoinColumn(name = "ingredient_category_id")
     private IngredientCategory ingredientCategory;
 
     @JsonIgnore
     @ManyToOne
+    @JoinColumn(name = "restaurant_id", nullable = false)
     private Restaurant restaurant;
 
     private boolean inStock = true;
@@ -68,32 +80,36 @@ public class IngredientsItems {
 
     @CreatedDate
     @NotNull
-    @NotBlank
+    @NotEmpty
     @Column(nullable = false, name = "created_at", updatable = false, columnDefinition = "DATETIME ZONE='UTC'")
     private Instant createdAt;
 
     @CreatedBy
     @NotNull
-    @NotBlank
-    @Column(nullable = false, name = "created_by", updatable = false)
+    @NotEmpty
+    @ManyToOne
+    @JoinColumn(nullable = false, name = "created_by_id", updatable = false)
     private User createdBy;
 
     @LastModifiedDate
     @NotNull
-    @NotBlank
+    @NotEmpty
     @Column(nullable = false, name = "updated_at", columnDefinition = "DATETIME ZONE='UTC'")
     private Instant updatedAt;
 
     @LastModifiedBy
     @NotNull
-    @NotBlank
-    @Column(nullable = false, name = "updated_by")
+    @NotEmpty
+    @ManyToOne
+    @JoinColumn(nullable = false, name = "updated_by_id")
     private User updatedBy;
 
     @SoftDelete
+    @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
     @Column(nullable = true, name = "deleted_at", columnDefinition = "DATETIME ZONE='UTC'")
     private Instant deletedAt;
 
+    @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
     @ManyToOne
     @JoinColumn(nullable = true, name = "deleted_by_id")
     private User deletedBy;
@@ -106,7 +122,7 @@ public class IngredientsItems {
         Class<?> thisEffectiveClass = this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass() : this.getClass();
         if (thisEffectiveClass != oEffectiveClass) return false;
         IngredientsItems that = (IngredientsItems) o;
-        return getId() != null && Objects.equals(getId(), that.getId());
+        return getIngredients_items_id() != null && Objects.equals(getIngredients_items_id(), that.getIngredients_items_id());
     }
 
     @Override
