@@ -1,12 +1,19 @@
+/*
+ * Copyright (c) 2024 Daniel Itiro Tikamori. All rights reserved.
+ */
+
 package me.amlu.service;
 
+import lombok.NonNull;
 import me.amlu.model.User;
-import me.amlu.service.Exceptions.UserNotFoundException;
+import me.amlu.service.exceptions.CustomerNotFoundException;
+import me.amlu.service.exceptions.UserNotFoundException;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public interface UserService extends UserDetailsService {
@@ -24,4 +31,6 @@ public interface UserService extends UserDetailsService {
     User updatePassword(Long userId, String password) throws UserNotFoundException;
 
     List<User> findUsersDeletedBefore(Instant anonymizationThreshold) throws UserNotFoundException;
+
+    Optional<Object> findUserById(@NonNull Long customerId) throws CustomerNotFoundException;
 }

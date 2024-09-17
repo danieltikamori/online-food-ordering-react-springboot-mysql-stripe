@@ -1,9 +1,14 @@
+/*
+ * Copyright (c) 2024 Daniel Itiro Tikamori. All rights reserved.
+ */
+
 package me.amlu.service;
 
 import me.amlu.model.IngredientCategory;
 import me.amlu.model.IngredientsItems;
 
 import java.util.List;
+import java.util.Set;
 
 public interface IngredientsService {
 
@@ -15,7 +20,7 @@ public interface IngredientsService {
 
     public IngredientsItems createIngredientsItems(Long restaurantId, String ingredientName, Long ingredientCategoryId) throws Exception;
 
-    public List<IngredientsItems> findRestaurantsIngredients(Long restaurantId) throws Exception;
+    public Set<IngredientsItems> findRestaurantsIngredients(Long restaurantId) throws Exception;
 
     public IngredientsItems updateStock(Long id) throws Exception;
 

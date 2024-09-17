@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2024 Daniel Itiro Tikamori. All rights reserved.
+ */
+
 package me.amlu.service;
 
 import me.amlu.model.Category;
@@ -8,9 +12,9 @@ import me.amlu.repository.CategoryRepository;
 import me.amlu.repository.FoodRepository;
 import me.amlu.repository.IngredientCategoryRepository;
 import me.amlu.repository.IngredientsItemsRepository;
-import me.amlu.service.Exceptions.DuplicateCategoryException;
-import me.amlu.service.Exceptions.DuplicateFoodException;
-import me.amlu.service.Exceptions.DuplicateItemException;
+import me.amlu.service.exceptions.DuplicateCategoryException;
+import me.amlu.service.exceptions.DuplicateFoodException;
+import me.amlu.service.exceptions.DuplicateItemException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
@@ -141,7 +145,7 @@ public class EntityUniquenessService {
     public void checkUniqueCategory(Category category) throws DuplicateCategoryException {
         if (categoryRepository.existsByCategoryNameAndRestaurantId(
                 category.getCategoryName(),
-                category.getRestaurant().getId() // Use restaurant ID
+                category.getRestaurant().getRestaurant_id() // Use restaurant ID
         )) {
             throw new DuplicateCategoryException("Category name '" + category.getCategoryName() + "' already exists");
         }
@@ -150,7 +154,7 @@ public class EntityUniquenessService {
     public void checkUniqueIngredientCategory(IngredientCategory ingredientCategory) throws DuplicateCategoryException {
         if (ingredientCategoryRepository.existsByCategoryNameAndRestaurantId(
                 ingredientCategory.getCategoryName(),
-                ingredientCategory.getRestaurant().getId() // Use restaurant ID
+                ingredientCategory.getRestaurant().getRestaurant_id() // Use restaurant ID
         )) {
             throw new DuplicateCategoryException("Ingredient category name '" + ingredientCategory.getCategoryName() + "' already exists");
         }

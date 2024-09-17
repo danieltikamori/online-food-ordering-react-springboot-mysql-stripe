@@ -1,5 +1,10 @@
+/*
+ * Copyright (c) 2024 Daniel Itiro Tikamori. All rights reserved.
+ */
+
 package me.amlu.controller;
 
+import me.amlu.dto.CartDto;
 import me.amlu.model.Cart;
 import me.amlu.model.CartItem;
 import me.amlu.model.User;
@@ -14,6 +19,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/v1")
@@ -58,7 +65,7 @@ public class CartController {
 //        return new ResponseEntity<>(cartItem, HttpStatus.OK);
     }
 
-    @DeleteMapping("/cart-item/{id}/remove")
+    @DeleteMapping("/cart-item/{category_id}/remove")
     public ResponseEntity<Cart> removeCartItem(@PathVariable Long id,
                                                  @RequestHeader("Authorization") String token) throws Exception {
         Cart cartItem = cartService.removeCartItem(id, token);
@@ -66,19 +73,20 @@ public class CartController {
     }
 
     @PutMapping("/cart/clear")
-    public ResponseEntity<Cart> clearCart(@RequestHeader("Authorization") String token) throws Exception {
+    public ResponseEntity<CartDto> clearCart(@RequestHeader("Authorization") String token) throws Exception {
 
         User user = userService.findUserByJwtToken(token);
-        Cart clearCart = cartService.clearCart(user.getId());
-        return ResponseEntity.status(HttpStatus.OK).body(clearCart);
+        cartService.clearCart(user.getUser_id());
+        return ResponseEntity.status(HttpStatus.OK).body(cartService.findCartByCustomerId(user.getUser_id()).orElseThrow(() -> new RuntimeException("Cart not found"))); // You may want to return a Cart object here
     }
 
     @GetMapping("/cart")
-    public ResponseEntity<Cart> getCart(@RequestHeader("Authorization") String token) throws Exception {
-
+    public ResponseEntity<CartDto> getCart(@RequestHeader("Authorization") String token) throws Exception {
         User user = userService.findUserByJwtToken(token);
-        Cart cart = cartService.findCartByCustomerId(user.getId());
-        return ResponseEntity.status(HttpStatus.OK).body(cart);
+        Optional<CartDto> cartDto = cartService.findCartByCustomerId(user.getUser_id());
+        return cartDto
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
     }
 
 }

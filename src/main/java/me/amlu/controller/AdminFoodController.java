@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2024 Daniel Itiro Tikamori. All rights reserved.
+ */
+
 package me.amlu.controller;
 
 import me.amlu.model.Food;
@@ -40,11 +44,11 @@ public class AdminFoodController {
         return new ResponseEntity<>(food, HttpStatus.CREATED);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{category_id}")
     public ResponseEntity<MessageResponse> deleteFood(@PathVariable Long id,
                                                       @RequestHeader("Authorization") String token) throws Exception {
         User user = userService.findUserByJwtToken(token);
-        foodService.deleteFood(id);
+        foodService.deleteFood(id, user.getUser_id());
 
         MessageResponse response = new MessageResponse();
         response.setMessage("Food deleted successfully.");
@@ -52,7 +56,7 @@ public class AdminFoodController {
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{category_id}")
     public ResponseEntity<Food> updateFoodAvailabilityStatus(@PathVariable Long id,
                                                       @RequestHeader("Authorization") String token) throws Exception {
         User user = userService.findUserByJwtToken(token);

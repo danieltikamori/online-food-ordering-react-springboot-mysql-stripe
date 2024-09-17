@@ -1,11 +1,17 @@
+/*
+ * Copyright (c) 2024 Daniel Itiro Tikamori. All rights reserved.
+ */
+
 package me.amlu.config;
 
 import me.amlu.repository.OrderRepository;
+import me.amlu.repository.RestaurantRepository;
 import me.amlu.repository.UserRepository;
 import me.amlu.service.*;
 import me.amlu.service.Tasks.RecordCleanupTask;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -26,6 +32,7 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@EnableJpaAuditing
 public class AppConfig {
 
     // Cross-Site Request Forgery
@@ -101,8 +108,8 @@ public class AppConfig {
     }
 
     @Bean
-    public DataRetentionPolicyImp dataRetentionPolicy(UserRepository userRepository, OrderRepository orderRepository) {
-        return new DataRetentionPolicyImp(userRepository, orderRepository);
+    public DataRetentionPolicyImp dataRetentionPolicy(UserRepository userRepository, OrderRepository orderRepository, RestaurantRepository restaurantRepository) {
+        return new DataRetentionPolicyImp(userRepository, orderRepository, restaurantRepository);
     }
 
     @Bean

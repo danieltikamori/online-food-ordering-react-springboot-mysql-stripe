@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2024 Daniel Itiro Tikamori. All rights reserved.
+ */
+
 package me.amlu.repository;
 
 import me.amlu.model.Restaurant;
@@ -22,4 +26,14 @@ public interface RestaurantRepository extends BaseRepository<Restaurant, Long> {
     boolean existsByOwnerId(Long userId);
 
     List<Restaurant> findByDeletedAtBefore(Instant anonymizationThreshold);
+
+    @Query("SELECT r.id AS id, r.name AS name, r.cuisineType AS cuisineType, AVG(f.rating) AS averageRating, r.images[0] AS imageUrl FROM Restaurant r LEFT JOIN r.foods f GROUP BY r.id")
+    List<RestaurantView> findAllRestaurants();
+    interface RestaurantView { // Projection interface defined within the repository
+        Long getId();
+        String getName();
+        String getCuisineType();
+        Double getAverageRating();
+        String getImageUrl();
+    }
 }

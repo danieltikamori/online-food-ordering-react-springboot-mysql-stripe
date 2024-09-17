@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2024 Daniel Itiro Tikamori. All rights reserved.
+ */
+
 package me.amlu.controller;
 
 import me.amlu.model.Order;
@@ -42,7 +46,7 @@ public class OrderController {
                                                        @RequestHeader("Authorization") String token) throws Exception {
 
         User user = userService.findUserByJwtToken(token);
-        List<Order> orders = orderService.getCustomerOrders(user.getId());
+        List<Order> orders = orderService.getCustomerOrders(user.getUser_id());
         if (orders == null) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }

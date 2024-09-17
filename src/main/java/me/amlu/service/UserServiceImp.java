@@ -1,9 +1,13 @@
+/*
+ * Copyright (c) 2024 Daniel Itiro Tikamori. All rights reserved.
+ */
+
 package me.amlu.service;
 
 import me.amlu.config.JwtProvider;
 import me.amlu.model.User;
 import me.amlu.repository.UserRepository;
-import me.amlu.service.Exceptions.UserNotFoundException;
+import me.amlu.service.exceptions.UserNotFoundException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -30,7 +34,7 @@ public class UserServiceImp implements UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found."));
         user.setDeletedAt(Instant.now());
-        user.setDeletedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        user.setDeletedBy(getAuthenticatedUser());
         userRepository.save(user);
 
     }
@@ -45,7 +49,7 @@ public class UserServiceImp implements UserService {
         }
         user.setFullName(fullName);
         user.setUpdatedAt(Instant.now());
-        user.setUpdatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        user.setUpdatedBy(getAuthenticatedUser());
         userRepository.save(user);
         return user;
     }
@@ -61,7 +65,7 @@ public class UserServiceImp implements UserService {
         }
         user.setEmail(email);
         user.setUpdatedAt(Instant.now());
-        user.setUpdatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        user.setUpdatedBy(getAuthenticatedUser());
         userRepository.save(user);
         return user;
     }
@@ -76,7 +80,7 @@ public class UserServiceImp implements UserService {
         }
         user.setPassword(password);
         user.setUpdatedAt(Instant.now());
-        user.setUpdatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        user.setUpdatedBy(getAuthenticatedUser());
         userRepository.save(user);
         return user;
     }

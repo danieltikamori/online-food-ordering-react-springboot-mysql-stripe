@@ -1,10 +1,13 @@
+/*
+ * Copyright (c) 2024 Daniel Itiro Tikamori. All rights reserved.
+ */
+
 package me.amlu.controller;
 
 import me.amlu.model.Cart;
-import me.amlu.model.USER_ROLE;
+import me.amlu.model.UserRole;
 import me.amlu.model.User;
 import me.amlu.request.LoginRequest;
-import me.amlu.request.UserRegisterRequest;
 import me.amlu.response.AuthResponse;
 import me.amlu.service.CustomerUserDetailsService;
 import me.amlu.config.JwtProvider;
@@ -73,7 +76,7 @@ public class AuthController {
 
         String jwt = jwtProvider.generateToken(authentication);
 
-        AuthResponse authResponse = new AuthResponse(jwt, USER_ROLE.ROLE_CUSTOMER);
+        AuthResponse authResponse = new AuthResponse(jwt, UserRole.ROLE_CUSTOMER);
         authResponse.setJwt(jwt);
         authResponse.setMessage("User created successfully.");
         authResponse.setRole(savedUser.getRole());
@@ -95,10 +98,10 @@ public class AuthController {
 
         String jwt = jwtProvider.generateToken(authentication);
 
-        AuthResponse authResponse = new AuthResponse(jwt, USER_ROLE.ROLE_CUSTOMER);
+        AuthResponse authResponse = new AuthResponse(jwt, UserRole.ROLE_CUSTOMER);
         authResponse.setJwt(jwt);
         authResponse.setMessage("Signed in successfully.");
-        authResponse.setRole(USER_ROLE.valueOf(role));
+        authResponse.setRole(UserRole.valueOf(role));
 
         return new ResponseEntity<>(authResponse, HttpStatus.OK);
     }

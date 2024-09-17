@@ -1,34 +1,45 @@
+/*
+ * Copyright (c) 2024 Daniel Itiro Tikamori. All rights reserved.
+ */
+
 package me.amlu.service;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.OptimisticLockException;
 import jakarta.persistence.PersistenceContext;
+import jakarta.validation.Valid;
 import me.amlu.dto.FoodDto;
 import me.amlu.dto.IngredientItemDto;
 import me.amlu.model.*;
 import me.amlu.repository.FoodRepository;
 import me.amlu.repository.UserRepository;
 import me.amlu.request.CreateFoodRequest;
-import me.amlu.service.Exceptions.FoodNotFoundException;
-import me.amlu.service.Exceptions.RestaurantNotFoundException;
+import me.amlu.request.UpdateFoodRequest;
+import me.amlu.service.exceptions.FoodNotFoundException;
+import me.amlu.service.exceptions.RestaurantNotFoundException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.hibernate.Hibernate;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
+import static me.amlu.common.SecurityUtil.getAuthenticatedUser;
+
 @Service
+@Validated
 public class FoodServiceImp implements FoodService {
 
     private final EntityUniquenessService uniquenessService;
+    private static final Logger log = LogManager.getLogger(FoodServiceImp.class);
 
     private final FoodRepository foodRepository;
-    final UserRepository userRepository;
+    private final UserRepository userRepository;
 
     @PersistenceContext
     private EntityManager entityManager;
@@ -42,14 +53,14 @@ public class FoodServiceImp implements FoodService {
 
     @Override
     @Transactional
-    public Food createFood(CreateFoodRequest createFoodRequest, Category category, Restaurant restaurant) throws Exception {
+    public Food createFood(@Valid CreateFoodRequest createFoodRequest, Category category, Restaurant restaurant) throws Exception {
 
         Food food = new Food();
         food.setFoodCategory(category);
         food.setRestaurant(restaurant);
 
-        List<IngredientsItems> ingredients = createFoodRequest.getIngredients();
-        List<IngredientsItems> mergedIngredients = new ArrayList<>();
+        Set<IngredientsItems> ingredients = createFoodRequest.getIngredients();
+        Set<IngredientsItems> mergedIngredients = Collections.synchronizedSet(new LinkedHashSet<>());
         for (IngredientsItems ingredient : ingredients) {
             // Have an EntityManager injected
             mergedIngredients.add(entityManager.merge(ingredient));
@@ -66,8 +77,8 @@ public class FoodServiceImp implements FoodService {
         food.setVegetarian(createFoodRequest.isVegetarian());
         food.setCreatedAt(Instant.now());
         food.setUpdatedAt(Instant.now());
-        food.setCreatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
-        food.setUpdatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        food.setCreatedBy(getAuthenticatedUser());
+        food.setUpdatedBy(getAuthenticatedUser());
 
 
         uniquenessService.checkUniqueFood(food); // Check if food name already exists
@@ -77,17 +88,73 @@ public class FoodServiceImp implements FoodService {
         return savedFood;
     }
 
+    @Transactional
+    public void updateFood(Long foodId, @Valid UpdateFoodRequest request) throws Exception {
+
+        int maxRetries = 3; // Define a maximum number of retry attempts
+        int retryCount = 0;
+
+        while (retryCount < maxRetries) {
+            try {
+                Food existingFood = foodRepository.findById(foodId)
+                        .orElseThrow(() -> new FoodNotFoundException("Food not found"));
+
+                existingFood.setName(request.getName());
+                existingFood.setDescription(request.getDescription());
+                existingFood.setFoodCategory(request.getFoodCategory());
+                existingFood.setPrice(request.getPrice());
+                existingFood.setImages(request.getImages());
+                existingFood.setAvailable(request.isAvailable());
+                existingFood.setSeasonal(request.isSeasonal());
+                existingFood.setVegetarian(request.isVegetarian());
+                existingFood.setIngredients(request.getIngredients());
+                existingFood.setUpdatedAt(Instant.now());
+                existingFood.setUpdatedBy(getAuthenticatedUser());
+
+                foodRepository.save(existingFood);
+
+                return; // Exit the loop if the update is successful
+
+            } catch (OptimisticLockException e) {
+                retryCount++;
+                if (retryCount >= maxRetries) {
+                    throw new ConcurrentModificationException("Food with ID " + foodId +
+                            " has been concurrently modified. Please try again later.", e);
+                }
+                // Log the retry attempt (for debugging)
+                log.warn("OptimisticLockException caught. Retrying update for food ID: {}, attempt {}/{}",
+                        foodId, retryCount, maxRetries);
+
+                // You might want to add a small delay here (e.g., Thread.sleep(500);)
+                // to reduce the likelihood of hitting the same conflict repeatedly.
+                // Sleep for a short time before retrying
+                try {
+                    Thread.sleep(500);
+                } catch (InterruptedException ex) {
+                    // Handle the interrupted exception
+                    Thread.currentThread().interrupt();
+                }
+            } catch (FoodNotFoundException e) {
+                throw new FoodNotFoundException("Food not found.");
+            }
+        }
+    }
+
+
     @Override
-    public void deleteFood(Long foodId, Restaurant restaurant, Long userId) throws Exception {
-        User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    @Transactional
+    public void deleteFood(Long foodId, Long userId) throws Exception {
+        User user = getAuthenticatedUser();
 
-        Food food = findFoodById(foodId);
-        food.setRestaurant(null);
-        food.setFoodCategory(null);
-        food.setIngredients(null);
-        food.setDeletedAt(Instant.now());
-        food.setDeletedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        Food food;
+        try {
+            food = findFoodById(foodId);
+            food.setDeletedAt(Instant.now());
+            food.setDeletedBy(getAuthenticatedUser());
 
+        } catch (FoodNotFoundException e) {
+            throw new FoodNotFoundException("Food not found.");
+        }
 
 //        foodRepository.delete(food);
         foodRepository.save(food);
@@ -103,42 +170,25 @@ public class FoodServiceImp implements FoodService {
 
         List<Food> foodList = foodRepository.findByRestaurantId(restaurantId);
 
-        if(isVegetarian) {
+        if (isVegetarian) {
             foodList = filterByVegetarian(foodList, isVegetarian);
         }
-        if(isNonVegetarian) {
+        if (isNonVegetarian) {
             foodList = filterByNonVegetarian(foodList, isNonVegetarian);
         }
-        if(isSeasonal) {
+        if (isSeasonal) {
             foodList = filterBySeasonal(foodList, isSeasonal);
         }
-        if(foodCategory != null && !foodCategory.isEmpty()) {
+        if (foodCategory != null && !foodCategory.isEmpty()) {
             foodList = filterByCategory(foodList, foodCategory);
         }
-
-//        Another approach instead of the if statements above that required creating new methods:
-//        if(isVegetarian) {
-//            foodList = foodList.stream().filter(food -> food.isVegetarian()).toList();
-//        }
-//
-//        if(isNonVegetarian) {
-//            foodList = foodList.stream().filter(food -> !food.isVegetarian()).toList();
-//        }
-//
-//        if(isSeasonal) {
-//            foodList = foodList.stream().filter(food -> food.isSeasonal()).toList();
-//        }
-//
-//        if(foodCategory != null) {
-//            foodList = foodList.stream().filter(food -> food.getFoodCategory().getCategoryName().equals(foodCategory)).toList();
-//        }
 
         return foodList;
     }
 
     private List<Food> filterByCategory(List<Food> foodList, String foodCategory) {
         return foodList.stream().filter(food -> {
-            if(food.getFoodCategory() != null) {
+            if (food.getFoodCategory() != null) {
                 return food.getFoodCategory().getCategoryName().equals(foodCategory);
             }
             return false;
@@ -146,7 +196,7 @@ public class FoodServiceImp implements FoodService {
     }
 
     private List<Food> filterBySeasonal(List<Food> foodList, boolean isSeasonal) {
-        return foodList.stream().filter(food -> food.isSeasonal()==isSeasonal).collect(Collectors.toList());
+        return foodList.stream().filter(food -> food.isSeasonal() == isSeasonal).collect(Collectors.toList());
     }
 
     private List<Food> filterByNonVegetarian(List<Food> foodList, boolean isNonVegetarian) {
@@ -154,18 +204,19 @@ public class FoodServiceImp implements FoodService {
     }
 
     private List<Food> filterByVegetarian(List<Food> foodList, boolean isVegetarian) {
-        return foodList.stream().filter(food -> food.isVegetarian()==isVegetarian).collect(Collectors.toList());
+        return foodList.stream().filter(food -> food.isVegetarian() == isVegetarian).collect(Collectors.toList());
     }
 
     @Override
     public List<Food> searchFood(String keyword) {
-        return foodRepository.searchFood(keyword);
+        return foodRepository.searchFoodIgnoreCase(keyword);
     }
 
     @Override
-    public Food findFoodById(Long foodId) throws Exception {
+    @Cacheable(value = "foods", key = "#foodId")
+    public Food findFoodById(Long foodId) throws FoodNotFoundException {
         Optional<Food> optionalFood = foodRepository.findById(foodId);
-        if(optionalFood.isEmpty()) {
+        if (optionalFood.isEmpty()) {
             throw new FoodNotFoundException("Food not exist.");
         }
         return optionalFood.get();
@@ -188,21 +239,25 @@ public class FoodServiceImp implements FoodService {
 //    }
 
     @Override
+    @Transactional
     public Food updateAvailabilityStatus(Long foodId) throws Exception {
 
-        Food food = findFoodById(foodId);
-        food.setAvailable(!food.isAvailable());
-        food.setUpdatedAt(Instant.now());
-        food.setUpdatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
-
-        return foodRepository.save(food);
+        try {
+            Food food = findFoodById(foodId);
+            food.setAvailable(!food.isAvailable());
+            food.setUpdatedAt(Instant.now());
+            food.setUpdatedBy(getAuthenticatedUser());
+            return foodRepository.save(food);
+        } catch (FoodNotFoundException e) {
+            throw new FoodNotFoundException("Food not found.");
+        }
     }
 
     @Override
     public FoodDto getFoodIngredients(Long restaurantId, Long foodId) throws Exception {
 
         Food food = findFoodById(foodId);
-        if (!food.getRestaurant().getId().equals(restaurantId)) {
+        if (!food.getRestaurant().getRestaurant_id().equals(restaurantId)) {
             throw new RestaurantNotFoundException("Restaurant not found.");
         }
 
@@ -211,20 +266,22 @@ public class FoodServiceImp implements FoodService {
 
         // Create and populate the DTO
         FoodDto foodDto = new FoodDto();
-        foodDto.setId(food.getId());
+        foodDto.setFood_id(food.getFood_id());
         foodDto.setName(food.getName());
         // ... map other fields from food to foodDto ...
+
         // Map ingredients to IngredientItemDto
-        List<IngredientItemDto> ingredientDtos = food.getIngredients().stream()
+        Set<IngredientItemDto> ingredientDtos = food.getIngredients().stream()
                 .map(ingredient -> {
                     IngredientItemDto ingredientDto = new IngredientItemDto();
-                    ingredientDto.setId(ingredient.getId());
+                    ingredientDto.setId(ingredient.getIngredients_items_id());
                     ingredientDto.setIngredientName(ingredient.getIngredientName());
-                    ingredientDto.setIngredientCategory(ingredient.getIngredientCategory()); // Add category mapping
-                    // ... map other fields from ingredient to ingredientDto ...
+                    ingredientDto.setIngredientCategory(ingredient.getIngredientCategory());
+                    ingredientDto.setRestaurant(ingredient.getRestaurant());
+                    ingredientDto.setInStock(ingredient.isInStock());
                     return ingredientDto;
                 })
-                .toList();
+                .collect(Collectors.toSet());
         foodDto.setIngredients(ingredientDtos);
         return foodDto;
     }

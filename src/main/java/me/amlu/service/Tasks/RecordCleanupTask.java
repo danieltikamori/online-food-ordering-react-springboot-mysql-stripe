@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2024 Daniel Itiro Tikamori. All rights reserved.
+ */
+
 package me.amlu.service.Tasks;
 
 import me.amlu.repository.OrderRepository;
@@ -28,12 +32,12 @@ public class RecordCleanupTask {
 
     @Scheduled(cron = "0 0 0 * * *") // run daily at midnight
     public void deleteDeletedRecords() throws NoSuchMethodException {
-        if (dataRetentionPolicy == null || dataRetentionPolicy.getRetentionDays() == 0) {
+        if (dataRetentionPolicy == null || dataRetentionPolicy.getRetentionDaysBeforeDatabaseRemotion() == 0) {
             // Do nothing if no retention period is configured
             return;
         }
 
-        Instant threshold = Instant.now().minus(dataRetentionPolicy.getRetentionDays(), ChronoUnit.DAYS);
+        Instant threshold = Instant.now().minus(dataRetentionPolicy.getRetentionDaysBeforeDatabaseRemotion(), ChronoUnit.DAYS);
         userRepository.deleteAllByDeletedAtBefore(threshold);
         orderRepository.deleteAllByDeletedAtBefore(threshold);
     }

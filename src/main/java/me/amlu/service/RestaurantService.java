@@ -1,9 +1,15 @@
+/*
+ * Copyright (c) 2024 Daniel Itiro Tikamori. All rights reserved.
+ */
+
 package me.amlu.service;
 
 import me.amlu.dto.RestaurantDto;
 import me.amlu.model.Restaurant;
 import me.amlu.model.User;
 import me.amlu.request.CreateRestaurantRequest;
+import me.amlu.service.exceptions.RestaurantNotFoundException;
+import org.springframework.security.core.Authentication;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +30,9 @@ public interface RestaurantService {
     public List<Restaurant> getAllRestaurants();
 
     public Restaurant findRestaurantById(Long restaurantId) throws Exception;
+
+//    public RestaurantDto getRestaurantById(Long category_id, Authentication authentication) throws RestaurantNotFoundException;
+
 
     public List<Restaurant> searchRestaurant(String keyword);
 

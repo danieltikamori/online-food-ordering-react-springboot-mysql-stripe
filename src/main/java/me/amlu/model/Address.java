@@ -33,7 +33,8 @@ import static me.amlu.common.SecurityUtil.getAuthenticatedUser;
 @SoftDelete
 @FilterDef(name = "deletedFilter", defaultCondition = "deleted_at IS NULL")
 @FilterDef(name = "adminFilter", defaultCondition = "1=1")
-@Table(indexes = @Index(name = "address_deleted_at_index", columnList = "street_address, deleted_at"), uniqueConstraints = @UniqueConstraint(columnNames = {"idempotency_key"}))
+@Table(indexes = @Index(name = "address_deleted_at_index", columnList = "street_address, deleted_at"),
+        uniqueConstraints = @UniqueConstraint(columnNames = {"idempotency_key"}))
 @Cacheable
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 @Getter

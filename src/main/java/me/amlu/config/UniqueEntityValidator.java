@@ -1,6 +1,9 @@
-package me.amlu.service;
+/*
+ * Copyright (c) 2024 Daniel Itiro Tikamori. All rights reserved.
+ */
 
-import org.springframework.beans.factory.annotation.Autowired;
+package me.amlu.config;
+
 import org.springframework.context.ApplicationContext;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Component;

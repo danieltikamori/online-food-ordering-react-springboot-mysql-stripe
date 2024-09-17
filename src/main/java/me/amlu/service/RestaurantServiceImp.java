@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2024 Daniel Itiro Tikamori. All rights reserved.
+ */
+
 package me.amlu.service;
 
 import lombok.NonNull;
@@ -9,10 +13,9 @@ import me.amlu.repository.AddressRepository;
 import me.amlu.repository.RestaurantRepository;
 import me.amlu.repository.UserRepository;
 import me.amlu.request.CreateRestaurantRequest;
-import me.amlu.service.Exceptions.RestaurantNotFoundException;
+import me.amlu.service.exceptions.RestaurantNotFoundException;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
@@ -20,6 +23,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
+
+import static me.amlu.common.SecurityUtil.getAuthenticatedUser;
 
 @Service
 public class RestaurantServiceImp implements RestaurantService {
@@ -105,7 +110,7 @@ public class RestaurantServiceImp implements RestaurantService {
 //        }
 
         restaurant.setUpdatedAt(Instant.now());
-        restaurant.setUpdatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        restaurant.setUpdatedBy(getAuthenticatedUser());
 
 
         return restaurantRepository.save(restaurant);
@@ -118,7 +123,7 @@ public class RestaurantServiceImp implements RestaurantService {
         Restaurant restaurant = findRestaurantById(restaurantId);
         restaurant.setOpenNow(!restaurant.isOpenNow());
         restaurant.setUpdatedAt(Instant.now());
-        restaurant.setUpdatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        restaurant.setUpdatedBy(getAuthenticatedUser());
 
         return restaurantRepository.save(restaurant);
     }
@@ -130,7 +135,7 @@ public class RestaurantServiceImp implements RestaurantService {
         Restaurant restaurant = optionalRestaurant.orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found with ID: " + restaurantId));
 
         restaurant.setDeletedAt(Instant.now());
-        restaurant.setDeletedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        restaurant.setDeletedBy(getAuthenticatedUser());
 
         restaurantRepository.delete(restaurant);
     }
@@ -155,7 +160,7 @@ public class RestaurantServiceImp implements RestaurantService {
     @Override
     public List<Restaurant> searchRestaurant(String keyword) {
 
-        return restaurantRepository.findBySearchQuery(keyword)
+        return restaurantRepository.findBySearchQueryIgnoreCase(keyword)
                 .stream()
                 .filter(restaurant -> restaurant.getDeletedAt() == null) // Filter out deleted restaurants
                 .collect(Collectors.toList());
@@ -194,14 +199,15 @@ public class RestaurantServiceImp implements RestaurantService {
 
         RestaurantDto restaurantDto = new RestaurantDto();
         restaurantDto.setDescription(restaurant.getDescription());
-        restaurantDto.setTitle(restaurant.getRestaurantName());
+        restaurantDto.setRestaurantName(restaurant.getRestaurantName());
         restaurantDto.setImages(restaurant.getImages());
-        restaurantDto.setId(restaurantId);
+        restaurantDto.setRestaurant_id(restaurantId);
 
         if(user.getFavoriteRestaurants().contains(restaurantDto)) {
             user.getFavoriteRestaurants().remove(restaurantDto);
+        } else {
+            user.getFavoriteRestaurants().add(restaurantDto);
         }
-        else user.getFavoriteRestaurants().add(restaurantDto);
 
 //        ## Another approach instead of the if statement above that required
 //        to override the equals and hashCode methods:
@@ -209,13 +215,13 @@ public class RestaurantServiceImp implements RestaurantService {
 //        boolean isFavorited = false;
 //        List<RestaurantDto> favoriteRestaurants = user.getFavoriteRestaurants();
 //        for (RestaurantDto favoriteRestaurant : favoriteRestaurants) {
-//            if (favoriteRestaurant.getId().equals(restaurantId)) {
+//            if (favoriteRestaurant.getCategory_id().equals(restaurantId)) {
 //                isFavorited = true;
 //                break;
 //            }
 //        }
 //        if (isFavorited) {
-//            favoriteRestaurants.removeIf(favoriteRestaurant -> favoriteRestaurant.getId().equals(restaurantId));
+//            favoriteRestaurants.removeIf(favoriteRestaurant -> favoriteRestaurant.getCategory_id().equals(restaurantId));
 //        } else {
 //            favoriteRestaurants.add(restaurantDto);
 //        }

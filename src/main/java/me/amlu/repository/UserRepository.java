@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2024 Daniel Itiro Tikamori. All rights reserved.
+ */
+
 package me.amlu.repository;
 
 import me.amlu.model.User;
@@ -17,7 +21,7 @@ public interface UserRepository extends BaseRepository<User, Long> {
     User findByFullName(@Param(value = "fullName") String fullName);
 
     @NonNull
-    @Query("SELECT u FROM User u WHERE u.id = :userId AND u.deletedAt IS NULL")
+    @Query("SELECT u FROM User u WHERE u.category_id = :userId AND u.deletedAt IS NULL")
     Optional<User> findById(@NonNull @Param(value = "userId") Long userId);
 
 

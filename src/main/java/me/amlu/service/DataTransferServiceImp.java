@@ -1,3 +1,7 @@
+/*
+ * Copyright (c) 2024 Daniel Itiro Tikamori. All rights reserved.
+ */
+
 package me.amlu.service;
 
 import lombok.NonNull;
@@ -33,7 +37,7 @@ public class DataTransferServiceImp implements DataTransferService {
     public void exportData(@NonNull User user) {
 
         // Export the data to a file
-        try (FileOutputStream fos = new FileOutputStream("anonymized_data_" + user.getId() + ".txt")) {
+        try (FileOutputStream fos = new FileOutputStream("anonymized_data_" + user.getUser_id() + ".txt")) {
             fos.write(user.toString().getBytes());
         } catch (IOException e) {
 // Handle the exception
@@ -46,12 +50,12 @@ public class DataTransferServiceImp implements DataTransferService {
 
 
     @Override
-    public void transferData(User user) throws Exception {
+    public void transferUserData(User user) throws Exception {
 
         exportData(user);
         try {
-            boolean isAnonymized = anonymizationService.anonymizeUser(user);
-            if (isAnonymized) {
+            boolean isUserAnonymized = anonymizationService.isUserAnonymized(user);
+            if (isUserAnonymized) {
 //                TODO:
                 //Transfer the data to a third-party service or storage
                 dataRetentionPolicy.applyRetentionPolicy(new AnonymizedData(), null);

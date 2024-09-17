@@ -1,7 +1,11 @@
+/*
+ * Copyright (c) 2024 Daniel Itiro Tikamori. All rights reserved.
+ */
+
 package me.amlu.controller;
 
 import me.amlu.model.User;
-import me.amlu.service.Exceptions.UserNotFoundException;
+import me.amlu.service.exceptions.UserNotFoundException;
 import me.amlu.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
