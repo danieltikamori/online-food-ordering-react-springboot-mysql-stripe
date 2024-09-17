@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (c) 2024 Daniel Itiro Tikamori. All rights reserved.
+  -->
+
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
@@ -32,6 +36,8 @@
         <org.mapstruct.version>1.6.0</org.mapstruct.version>
         <org.mapstruct.processor.version>1.6.0</org.mapstruct.processor.version>
         <org.lombok.mapstruct.binding.version>0.2.0</org.lombok.mapstruct.binding.version>
+        <hibernate-envers.version>6.4.4.Final</hibernate-envers.version>
+        <log4j2.version>2.24.0</log4j2.version>
         <jsonwebtoken.version>0.12.5</jsonwebtoken.version>
         <jakarta.validation.version>3.1.0</jakarta.validation.version>
         <spring-boot-starter-validation.version>3.3.3</spring-boot-starter-validation.version>
@@ -44,6 +50,12 @@
         <commons-io.version>2.16.1</commons-io.version>
         <apache.commons.csv.version>1.11.0</apache.commons.csv.version>
         <aws-java-sdk-s3.version>1.12.771</aws-java-sdk-s3.version>
+        <joou.version>0.9.4</joou.version>
+        <guava.version>33.3.0-jre</guava.version>
+        <libphonenumber.version>8.13.45</libphonenumber.version>
+        <libphonenumber-prefixmapper.version>2.239</libphonenumber-prefixmapper.version>
+        <libphonenumber-geocoder.version>2.239</libphonenumber-geocoder.version>
+        <libphonenumber-carrier.version>1.229</libphonenumber-carrier.version>
 
     </properties>
     <dependencies>
@@ -58,6 +70,11 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-cache</artifactId>
         </dependency>
 
         <dependency>
@@ -104,6 +121,25 @@
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok-mapstruct-binding</artifactId>
             <version>${org.lombok.mapstruct.binding.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.hibernate.orm</groupId>
+            <artifactId>hibernate-envers</artifactId>
+            <version>${hibernate-envers.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-log4j2</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-bom</artifactId>
+            <version>${log4j2.version}</version>
+            <scope>import</scope>
+            <type>pom</type>
         </dependency>
 
         <dependency>
@@ -198,6 +234,51 @@
             <artifactId>aws-java-sdk-s3</artifactId>
             <version>${aws-java-sdk-s3.version}</version>
         </dependency>
+
+        <!-- Unsigned Integers jOOU provides unsigned integer versions for the four Java integer types byte, short, int and long. -->
+        <dependency>
+            <groupId>org.jooq</groupId>
+            <artifactId>joou</artifactId>
+            <version>${joou.version}</version>
+        </dependency>
+
+        <!-- Guava is a set of core Java libraries from Google that includes new collection types (such as multimap and multiset), immutable collections, a graph library, and utilities for concurrency, I/O, hashing, primitives, strings, and more! -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>${guava.version}</version>
+            <!-- or, for Android: -->
+<!--            <version>33.3.0-android</version>-->
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/com.googlecode.libphonenumber/libphonenumber -->
+        <dependency>
+            <groupId>com.googlecode.libphonenumber</groupId>
+            <artifactId>libphonenumber</artifactId>
+            <version>${libphonenumber.version}</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/com.googlecode.libphonenumber/prefixmapper -->
+        <dependency>
+            <groupId>com.googlecode.libphonenumber</groupId>
+            <artifactId>prefixmapper</artifactId>
+            <version>${libphonenumber-prefixmapper.version}</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/com.googlecode.libphonenumber/geocoder -->
+        <dependency>
+            <groupId>com.googlecode.libphonenumber</groupId>
+            <artifactId>geocoder</artifactId>
+            <version>${libphonenumber-geocoder.version}</version>
+        </dependency>
+
+        <!-- https://mvnrepository.com/artifact/com.googlecode.libphonenumber/carrier -->
+        <dependency>
+            <groupId>com.googlecode.libphonenumber</groupId>
+            <artifactId>carrier</artifactId>
+            <version>${libphonenumber-carrier.version}</version>
+        </dependency>
+
 
     </dependencies>
 
