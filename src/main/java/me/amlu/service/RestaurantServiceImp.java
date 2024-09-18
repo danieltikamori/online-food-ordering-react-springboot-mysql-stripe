@@ -206,7 +206,7 @@ public class RestaurantServiceImp implements RestaurantService {
         restaurantDto.setDescription(restaurant.getDescription());
         restaurantDto.setTitle(restaurant.getRestaurantName());
         restaurantDto.setImages(restaurant.getImages());
-        restaurantDto.setId(restaurantId);
+        restaurantDto.setRestaurant_id(restaurantId);
 
         if(user.getFavoriteRestaurants().contains(restaurantDto)) {
             user.getFavoriteRestaurants().remove(restaurantDto);
@@ -219,13 +219,13 @@ public class RestaurantServiceImp implements RestaurantService {
 //        boolean isFavorited = false;
 //        List<RestaurantDto> favoriteRestaurants = user.getFavoriteRestaurants();
 //        for (RestaurantDto favoriteRestaurant : favoriteRestaurants) {
-//            if (favoriteRestaurant.getId().equals(restaurantId)) {
+//            if (favoriteRestaurant.getCategory_id().equals(restaurantId)) {
 //                isFavorited = true;
 //                break;
 //            }
 //        }
 //        if (isFavorited) {
-//            favoriteRestaurants.removeIf(favoriteRestaurant -> favoriteRestaurant.getId().equals(restaurantId));
+//            favoriteRestaurants.removeIf(favoriteRestaurant -> favoriteRestaurant.getCategory_id().equals(restaurantId));
 //        } else {
 //            favoriteRestaurants.add(restaurantDto);
 //        }
