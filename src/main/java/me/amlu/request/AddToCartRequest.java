@@ -10,12 +10,16 @@
 
 package me.amlu.request;
 
+import jakarta.validation.constraints.NotEmpty;
 import lombok.Data;
 import me.amlu.model.CartItem;
 @Data
 public class AddToCartRequest {
 
+    @NotEmpty(message = "Token cannot be blank.")
     private String token;
+
+    @NotEmpty(message = "Cart item cannot be null.")
     private CartItem cartItem;
 
 }

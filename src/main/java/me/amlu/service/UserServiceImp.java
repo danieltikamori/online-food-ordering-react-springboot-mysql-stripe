@@ -10,10 +10,12 @@
 
 package me.amlu.service;
 
+import lombok.NonNull;
 import me.amlu.config.JwtProvider;
 import me.amlu.model.User;
 import me.amlu.repository.UserRepository;
-import me.amlu.service.Exceptions.UserNotFoundException;
+import me.amlu.service.exceptions.CustomerNotFoundException;
+import me.amlu.service.exceptions.UserNotFoundException;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -21,6 +23,9 @@ import org.springframework.stereotype.Service;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
+
+import static me.amlu.common.SecurityUtil.getAuthenticatedUser;
 
 @Service
 public class UserServiceImp implements UserService {
@@ -40,7 +45,7 @@ public class UserServiceImp implements UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found."));
         user.setDeletedAt(Instant.now());
-        user.setDeletedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        user.setDeletedBy(getAuthenticatedUser());
         userRepository.save(user);
 
     }
@@ -55,7 +60,7 @@ public class UserServiceImp implements UserService {
         }
         user.setFullName(fullName);
         user.setUpdatedAt(Instant.now());
-        user.setUpdatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        user.setUpdatedBy(getAuthenticatedUser());
         userRepository.save(user);
         return user;
     }
@@ -71,7 +76,7 @@ public class UserServiceImp implements UserService {
         }
         user.setEmail(email);
         user.setUpdatedAt(Instant.now());
-        user.setUpdatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        user.setUpdatedBy(getAuthenticatedUser());
         userRepository.save(user);
         return user;
     }
@@ -86,7 +91,7 @@ public class UserServiceImp implements UserService {
         }
         user.setPassword(password);
         user.setUpdatedAt(Instant.now());
-        user.setUpdatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        user.setUpdatedBy(getAuthenticatedUser());
         userRepository.save(user);
         return user;
     }
@@ -97,6 +102,12 @@ public class UserServiceImp implements UserService {
         // Find all users deleted before the threshold
         return userRepository.findByDeletedAtBefore(anonymizationThreshold);
 
+    }
+
+    @Override
+    public Optional<Object> findUserById(@NonNull Long customerId) throws CustomerNotFoundException {
+
+        return Optional.of(userRepository.findById(customerId));
     }
 
     @Override
