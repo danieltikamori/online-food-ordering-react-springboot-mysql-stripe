@@ -13,9 +13,9 @@ package me.amlu.controller;
 import me.amlu.dto.RestaurantDto;
 import me.amlu.model.Restaurant;
 import me.amlu.model.User;
-import me.amlu.service.Exceptions.RestaurantNotFoundException;
+import me.amlu.service.exceptions.RestaurantNotFoundException;
 import me.amlu.service.RestaurantService;
-import me.amlu.service.Exceptions.UserNotFoundException;
+import me.amlu.service.exceptions.UserNotFoundException;
 import me.amlu.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -77,7 +77,7 @@ public class RestaurantController {
         return new ResponseEntity<>(restaurant, HttpStatus.OK);
     }
 
-    @PutMapping("/{id}/add-favorites")
+    @PutMapping("/{category_id}/add-favorites")
     public ResponseEntity<RestaurantDto> addRestaurantToFavorites(
             @RequestHeader("Authorization") String token,
             @PathVariable Long id)

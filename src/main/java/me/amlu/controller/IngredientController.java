@@ -20,7 +20,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
+
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/v1/admin/ingredients")
@@ -51,7 +54,7 @@ public class IngredientController {
         return new ResponseEntity<>(item, HttpStatus.CREATED);
     }
 
-    @PutMapping("/{id}/stock")
+    @PutMapping("/{category_id}/stock")
     public ResponseEntity<IngredientsItems> updateStock(
             @PathVariable Long id
     ) throws Exception {
@@ -60,7 +63,7 @@ public class IngredientController {
         return new ResponseEntity<>(item, HttpStatus.OK);
     }
 
-    @PutMapping("/category/{id}")
+    @PutMapping("/category/{category_id}")
     public ResponseEntity<IngredientCategory> updateIngredientCategory(
             @PathVariable Long id,
             @Valid @RequestBody String name
@@ -69,7 +72,7 @@ public class IngredientController {
         return new ResponseEntity<>(category, HttpStatus.OK);
     }
 
-    @DeleteMapping("/category/{id}")
+    @DeleteMapping("/category/{category_id}")
     public ResponseEntity<Void> deleteIngredientCategory(
             @PathVariable Long id
     ) throws Exception {
@@ -77,7 +80,7 @@ public class IngredientController {
         return ResponseEntity.noContent().build();
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{category_id}")
     public ResponseEntity<Void> deleteIngredientsItems(
             @PathVariable Long id
     ) throws Exception {
@@ -87,10 +90,10 @@ public class IngredientController {
 
 
     @GetMapping("/restaurant/{id}")
-    public ResponseEntity<List<IngredientsItems>> getRestaurantsIngredients(
+    public ResponseEntity<Set<IngredientsItems>> getRestaurantsIngredients(
             @PathVariable Long id
     ) throws Exception {
-        List<IngredientsItems> items = ingredientsService.findRestaurantsIngredients(id);
+        Set<IngredientsItems> items = Collections.synchronizedSet(ingredientsService.findRestaurantsIngredients(id));
 
         return new ResponseEntity<>(items, HttpStatus.OK);
     }

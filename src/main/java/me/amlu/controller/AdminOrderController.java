@@ -46,7 +46,7 @@ public class AdminOrderController {
         return new ResponseEntity<>(orders, HttpStatus.OK);
     }
 
-    @PutMapping("/order/{id}/{orderStatus}")
+    @PutMapping("/order/{category_id}/{orderStatus}")
     public ResponseEntity<Order> updateOrderStatus(
             @PathVariable Long id,
             @PathVariable String orderStatus,
@@ -60,7 +60,7 @@ public class AdminOrderController {
         return new ResponseEntity<>(order, HttpStatus.OK);
     }
 
-    @PutMapping("/order/{id}/cancel")
+    @PutMapping("/order/{category_id}/cancel")
     public ResponseEntity<Order> cancelOrder(
             @PathVariable Long id,
             @RequestHeader("Authorization") String token) throws Exception {
@@ -72,7 +72,7 @@ public class AdminOrderController {
         return new ResponseEntity<>(order, HttpStatus.OK);
     }
 
-    @DeleteMapping("/order/{id}")
+    @DeleteMapping("/order/{category_id}")
     public ResponseEntity<String> deleteOrder(
             @PathVariable Long id,
             @RequestHeader("Authorization") String token) throws Exception {

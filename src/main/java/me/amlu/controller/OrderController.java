@@ -52,7 +52,7 @@ public class OrderController {
                                                        @RequestHeader("Authorization") String token) throws Exception {
 
         User user = userService.findUserByJwtToken(token);
-        List<Order> orders = orderService.getCustomerOrders(user.getId());
+        List<Order> orders = orderService.getCustomerOrders(user.getUser_id());
         if (orders == null) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }

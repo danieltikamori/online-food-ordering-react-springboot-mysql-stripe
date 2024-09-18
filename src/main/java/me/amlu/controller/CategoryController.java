@@ -41,7 +41,7 @@ public class CategoryController {
         User user = userService.findUserByJwtToken(token);
 
         // If no existing category is found, create a new category
-        Category createdCategory = categoryService.createCategory(category.getCategoryName(), user.getId());
+        Category createdCategory = categoryService.createCategory(category.getCategoryName(), user.getUser_id());
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(createdCategory);
     }
@@ -57,7 +57,7 @@ public class CategoryController {
         return new ResponseEntity<>(categories, HttpStatus.OK);
     }
 
-    @DeleteMapping("/admin/category/{id}")
+    @DeleteMapping("/admin/category/{category_id}")
     public ResponseEntity<Void> deleteCategory(@PathVariable Long id,
                                                @RequestHeader("Authorization") String token) throws Exception {
         User user = userService.findUserByJwtToken(token);

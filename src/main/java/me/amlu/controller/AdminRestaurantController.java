@@ -15,7 +15,7 @@ import me.amlu.model.User;
 import me.amlu.request.CreateRestaurantRequest;
 import me.amlu.response.MessageResponse;
 import me.amlu.service.RestaurantService;
-import me.amlu.service.Exceptions.UserNotFoundException;
+import me.amlu.service.exceptions.UserNotFoundException;
 import me.amlu.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -51,7 +51,7 @@ public class AdminRestaurantController {
         return new ResponseEntity<>(restaurant, HttpStatus.CREATED);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{category_id}")
     public ResponseEntity<Restaurant> updateRestaurant(
             @Valid @RequestBody CreateRestaurantRequest restaurantRequest,
             @RequestHeader("Authorization") String token,
@@ -66,7 +66,7 @@ public class AdminRestaurantController {
         return new ResponseEntity<>(restaurant, HttpStatus.OK);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{category_id}")
     public ResponseEntity<MessageResponse> deleteRestaurant(
             @RequestHeader("Authorization") String token,
             @PathVariable Long id)
@@ -80,7 +80,7 @@ public class AdminRestaurantController {
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @PutMapping("/{id}/status")
+    @PutMapping("/{category_id}/status")
     public ResponseEntity<Restaurant> updateRestaurantStatus(
             @RequestHeader("Authorization") String token,
             @PathVariable Long id)
@@ -98,7 +98,7 @@ public class AdminRestaurantController {
             throws Exception {
         User user = userService.findUserByJwtToken(token);
 
-        Optional<Restaurant> restaurants = restaurantService.getRestaurantsByUserId(user.getId());
+        Optional<Restaurant> restaurants = restaurantService.getRestaurantsByUserId(user.getUser_id());
 
         return ResponseEntity.ok(restaurants);
     }
