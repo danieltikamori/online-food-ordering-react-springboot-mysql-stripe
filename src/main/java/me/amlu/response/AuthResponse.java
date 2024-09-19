@@ -11,15 +11,15 @@
 package me.amlu.response;
 
 import lombok.Data;
-import me.amlu.model.USER_ROLE;
+import me.amlu.model.UserRole;
 
 @Data
 public class AuthResponse {
     private String jwt;
     private String message;
-    private USER_ROLE role;
+    private UserRole role;
 
-    public AuthResponse(String emailAlreadyExist, USER_ROLE userRole) {
+    public AuthResponse(String emailAlreadyExist, UserRole userRole) {
         this.message = emailAlreadyExist;
         this.role = userRole;
     }

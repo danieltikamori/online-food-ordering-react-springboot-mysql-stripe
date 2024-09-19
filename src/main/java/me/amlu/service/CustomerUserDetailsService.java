@@ -10,7 +10,7 @@
 
 package me.amlu.service;
 
-import me.amlu.model.USER_ROLE;
+import me.amlu.model.UserRole;
 import me.amlu.model.User;
 import me.amlu.repository.UserRepository;
 import org.springframework.security.core.GrantedAuthority;
@@ -41,7 +41,7 @@ public class CustomerUserDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException("User not found with email: " + username + ".");
         }
 
-        USER_ROLE role = user.getRole();
+        UserRole role = user.getRole();
 
         List<GrantedAuthority> authorities = new ArrayList<>();
 

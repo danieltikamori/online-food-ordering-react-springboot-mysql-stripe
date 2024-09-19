@@ -10,7 +10,7 @@
 
 package me.amlu.repository;
 
-import me.amlu.model.ORDER_STATUS;
+import me.amlu.model.OrderStatus;
 import me.amlu.model.Order;
 import me.amlu.model.User;
 import org.springframework.lang.NonNull;
@@ -23,7 +23,7 @@ public interface OrderRepository extends BaseRepository<Order, Long> {
 
     List<Order> findByCustomerId(Long customerId);
 
-    List<Order> findByRestaurantIdAndAndOrderStatus(Long restaurantId, ORDER_STATUS status);
+    List<Order> findByRestaurantIdAndAndOrderStatus(Long restaurantId, OrderStatus status);
 
     @NonNull
     Optional<Order> findById(@NonNull Long orderId);
@@ -31,4 +31,6 @@ public interface OrderRepository extends BaseRepository<Order, Long> {
     void deleteAllByDeletedAtBefore(Instant threshold);
 
     List<Order> findByCustomer(User customer);
+
+    Optional<Order> findByIdempotencyKey(String idempotencyKey);
 }
