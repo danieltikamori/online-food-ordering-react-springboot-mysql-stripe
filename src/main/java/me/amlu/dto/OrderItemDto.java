@@ -10,40 +10,7 @@
 
 package me.amlu.dto;
 
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
-import lombok.Data;
-import me.amlu.model.Food;
-import me.amlu.model.IngredientsItems;
-
-import java.math.BigDecimal;
-import java.util.Set;
-
-@Data
-public class CartItemDto {
-
-    @NotEmpty
-    Food food;
-
-    @Positive
-    private Long foodId;
-
-    @NotEmpty
-    private String foodName;
-
-    @PositiveOrZero
-    private BigDecimal foodPrice;
-
-    @Positive
-    private int quantity;
-
-    @NotEmpty
-    private String idempotencyKey;
-
-    private Set<IngredientsItems> ingredients;
-
-    private Set<Long> ingredientsIds;
+public class OrderItemDto {
+//    TODO: implement
 
 }
-

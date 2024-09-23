@@ -11,39 +11,41 @@
 package me.amlu.dto;
 
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
-import lombok.Data;
-import me.amlu.model.Food;
-import me.amlu.model.IngredientsItems;
+import me.amlu.model.OrderStatus;
+import me.amlu.model.User;
 
-import java.math.BigDecimal;
-import java.util.Set;
+import java.time.Instant;
 
-@Data
-public class CartItemDto {
+public class OrderDto {
 
     @NotEmpty
-    Food food;
-
-    @Positive
-    private Long foodId;
+    private Long order_id;
 
     @NotEmpty
-    private String foodName;
+    private Long restaurant_id;
 
-    @PositiveOrZero
-    private BigDecimal foodPrice;
+    @NotEmpty
+    private UserToOrderDto customer;
 
-    @Positive
-    private int quantity;
+    @NotEmpty
+    private AddressDto customerAddress;
+
+//    @NotEmpty
+//    private PaymentMethod paymentMethod;
+//
+//    @NotEmpty
+//    private PaymentStatus paymentStatus;
+
+    @NotEmpty
+    private OrderStatus orderStatus;
 
     @NotEmpty
     private String idempotencyKey;
 
-    private Set<IngredientsItems> ingredients;
+    @NotEmpty
+    private Instant updatedAt;
 
-    private Set<Long> ingredientsIds;
+    @NotEmpty
+    private UserToOrderDto updatedBy;
 
 }
-

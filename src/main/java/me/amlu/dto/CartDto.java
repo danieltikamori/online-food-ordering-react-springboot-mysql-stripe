@@ -8,42 +8,28 @@
  * Please contact the copyright holder at fuiwzchps@mozmail.com for any inquiries or requests for authorization to use the software.
  */
 
-package me.amlu.dto;
+package me.amlu.dto; // Put your DTOs in a dedicated package
 
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
+import lombok.AllArgsConstructor;
 import lombok.Data;
-import me.amlu.model.Food;
-import me.amlu.model.IngredientsItems;
+import me.amlu.model.CartItem;
 
 import java.math.BigDecimal;
-import java.util.Set;
+import java.util.List;
 
 @Data
-public class CartItemDto {
-
-    @NotEmpty
-    Food food;
+@AllArgsConstructor
+public class CartDto {
 
     @Positive
-    private Long foodId;
+    private Long cart_id;
 
     @NotEmpty
-    private String foodName;
+    private List<CartItem> cartItems;
 
     @PositiveOrZero
-    private BigDecimal foodPrice;
-
-    @Positive
-    private int quantity;
-
-    @NotEmpty
-    private String idempotencyKey;
-
-    private Set<IngredientsItems> ingredients;
-
-    private Set<Long> ingredientsIds;
-
+    private BigDecimal totalAmount;
 }
-

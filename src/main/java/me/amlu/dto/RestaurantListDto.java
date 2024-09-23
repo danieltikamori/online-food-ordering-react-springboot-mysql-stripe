@@ -10,40 +10,24 @@
 
 package me.amlu.dto;
 
+import jakarta.persistence.Embeddable;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Data;
-import me.amlu.model.Food;
-import me.amlu.model.IngredientsItems;
-
-import java.math.BigDecimal;
-import java.util.Set;
 
 @Data
-public class CartItemDto {
+@Embeddable
+public class RestaurantListDto { // Specific DTO for listing restaurants
+
+//    TODO: finish implementation
+    @NotEmpty
+    private Long id;
 
     @NotEmpty
-    Food food;
-
-    @Positive
-    private Long foodId;
+    private String name;
 
     @NotEmpty
-    private String foodName;
-
-    @PositiveOrZero
-    private BigDecimal foodPrice;
-
-    @Positive
-    private int quantity;
+    private String cuisineType;
 
     @NotEmpty
-    private String idempotencyKey;
-
-    private Set<IngredientsItems> ingredients;
-
-    private Set<Long> ingredientsIds;
-
+    private String images; // Single image for thumbnail
 }
-

@@ -45,7 +45,7 @@ public class RestaurantDto {
     @NotEmpty
     @Column(length = 8191)
     @Size(max = 8191)
-    private List<String> images;
+    private List<String> imagesURL;
 
     @Column(length = 2047)
     @Size(max = 2047)
@@ -106,7 +106,7 @@ public class RestaurantDto {
         restaurantDto.setRestaurant_id(restaurant.getRestaurant_id());
         restaurantDto.setRestaurantName(restaurant.getRestaurantName());
         restaurantDto.setDescription(restaurant.getDescription());
-        restaurantDto.setImages(restaurant.getImages());
+        restaurantDto.setImagesURL(restaurant.getImagesURL());
         restaurantDto.setCuisineType(restaurant.getCuisineType());
         restaurantDto.setAddress(restaurant.getAddress());
         restaurantDto.setContactInformation(ContactInformationDto.fromEntity(restaurant.getContactInformation()));

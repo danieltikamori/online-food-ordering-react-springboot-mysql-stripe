@@ -10,40 +10,28 @@
 
 package me.amlu.dto;
 
+import jakarta.persistence.Embeddable;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Data;
-import me.amlu.model.Food;
-import me.amlu.model.IngredientsItems;
+import me.amlu.model.Address;
 
-import java.math.BigDecimal;
-import java.util.Set;
+import java.util.List;
 
 @Data
-public class CartItemDto {
-
-    @NotEmpty
-    Food food;
+@Embeddable
+public class CartToOrderDto {
 
     @Positive
-    private Long foodId;
+    private Long cart_id;
 
     @NotEmpty
-    private String foodName;
-
-    @PositiveOrZero
-    private BigDecimal foodPrice;
-
-    @Positive
-    private int quantity;
+    private List<CartItemDto> cartItems;
 
     @NotEmpty
-    private String idempotencyKey;
-
-    private Set<IngredientsItems> ingredients;
-
-    private Set<Long> ingredientsIds;
-
+    @ManyToOne
+    @JoinColumn(name = "delivery_address_address_id")
+    private Address deliveryAddress;
 }
-

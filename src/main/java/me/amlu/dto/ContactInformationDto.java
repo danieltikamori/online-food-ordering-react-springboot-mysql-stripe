@@ -10,40 +10,25 @@
 
 package me.amlu.dto;
 
+import com.google.i18n.phonenumbers.Phonenumber;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Positive;
-import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Data;
-import me.amlu.model.Food;
-import me.amlu.model.IngredientsItems;
-
-import java.math.BigDecimal;
-import java.util.Set;
+import me.amlu.model.ContactInformation;
 
 @Data
-public class CartItemDto {
+public class ContactInformationDto {
 
     @NotEmpty
-    Food food;
-
-    @Positive
-    private Long foodId;
+    private String email;
 
     @NotEmpty
-    private String foodName;
+    private Phonenumber.PhoneNumber phoneNumber;
 
-    @PositiveOrZero
-    private BigDecimal foodPrice;
-
-    @Positive
-    private int quantity;
-
-    @NotEmpty
-    private String idempotencyKey;
-
-    private Set<IngredientsItems> ingredients;
-
-    private Set<Long> ingredientsIds;
-
+    public static ContactInformationDto fromEntity(@Valid @NotEmpty ContactInformation contactInformation) {
+        ContactInformationDto dto = new ContactInformationDto();
+        dto.setEmail(contactInformation.getEmail());
+        dto.setPhoneNumber(contactInformation.getPhoneNumber());
+        return dto;
+    }
 }
-
