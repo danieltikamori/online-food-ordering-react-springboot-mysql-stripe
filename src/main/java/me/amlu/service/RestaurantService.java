@@ -14,6 +14,7 @@ import me.amlu.dto.RestaurantDto;
 import me.amlu.model.Restaurant;
 import me.amlu.model.User;
 import me.amlu.request.CreateRestaurantRequest;
+import me.amlu.service.exceptions.RestaurantNotFoundException;
 
 import java.util.List;
 import java.util.Optional;
@@ -26,8 +27,11 @@ public interface RestaurantService {
 
     public Restaurant updateRestaurantStatus(Long restaurantId) throws Exception;
 
+    // Logical deletion
     public void deleteRestaurant(Long restaurantId) throws Exception;
 
+    // Permanent deletion
+    public void permanentlyDeleteRestaurant(Long restaurantId) throws Exception;
 
     // List methods
 
@@ -35,15 +39,18 @@ public interface RestaurantService {
 
     public Restaurant findRestaurantById(Long restaurantId) throws Exception;
 
-    public List<Restaurant> searchRestaurant(String keyword);
+//    public RestaurantDto getRestaurantById(Long category_id, Authentication authentication) throws RestaurantNotFoundException;
+
+
+    public List<Restaurant> searchRestaurant(String keyword) throws RestaurantNotFoundException;
 
     public Optional<Restaurant> getRestaurantsByUserId(Long userId) throws Exception;
 
-    public List<Restaurant> getRestaurantsByCategory(String category) throws Exception;
+    public Optional<Object> getRestaurantsByCategory(String category) throws Exception;
 
     public List<Restaurant> getRestaurantsByCuisineType(String cuisineType) throws Exception;
 
-    public List<Restaurant> getRestaurantsByAddress(String address) throws Exception;
+    public List<Restaurant> getRestaurantsByCity(String address) throws Exception;
 
     public List<Restaurant> getRestaurantsByOpeningHours(String openingHours) throws Exception;
 

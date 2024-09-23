@@ -16,10 +16,14 @@ import me.amlu.model.User;
 import me.amlu.repository.UserRepository;
 import me.amlu.service.exceptions.CustomerNotFoundException;
 import me.amlu.service.exceptions.UserNotFoundException;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
@@ -30,10 +34,10 @@ import static me.amlu.common.SecurityUtil.getAuthenticatedUser;
 @Service
 public class UserServiceImp implements UserService {
 
+    private static final Logger log = LogManager.getLogger(UserServiceImp.class);
     private final UserRepository userRepository;
 
     private final JwtProvider jwtProvider;
-
 
 
     public UserServiceImp(UserRepository userRepository, JwtProvider jwtProvider) {
@@ -41,6 +45,7 @@ public class UserServiceImp implements UserService {
         this.jwtProvider = jwtProvider;
     }
 
+    @Transactional
     public void deleteUser(Long userId) throws UserNotFoundException {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found."));
@@ -48,6 +53,21 @@ public class UserServiceImp implements UserService {
         user.setDeletedBy(getAuthenticatedUser());
         userRepository.save(user);
 
+    }
+
+    @Override
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_ROOT')")
+    @Async
+    @Transactional
+    public void permanentlyDeleteUser(Long userId) throws UserNotFoundException {
+        try {
+            User user = userRepository.findById(userId)
+                    .orElseThrow(() -> new UserNotFoundException("User not found."));
+            userRepository.deleteById(userId);
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            throw new UserNotFoundException("User not found.");
+        }
     }
 
     @Override
@@ -112,7 +132,7 @@ public class UserServiceImp implements UserService {
 
     @Override
     public User findUserByJwtToken(String token) throws UserNotFoundException {
-        String email =jwtProvider.getEmailFromJwtToken(token);
+        String email = jwtProvider.getEmailFromJwtToken(token);
 
         User user = findUserByEmail(email);
         if (email == null || email.isEmpty() || user.getDeletedAt() != null) {

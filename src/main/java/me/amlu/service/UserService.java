@@ -28,7 +28,12 @@ public interface UserService extends UserDetailsService {
 
     public User findUserByEmail(String email) throws UserNotFoundException;
 
+    // Logical user deletion
     void deleteUser(Long userId) throws UserNotFoundException;
+
+    // Permanent user deletion
+    void permanentlyDeleteUser(Long userId) throws UserNotFoundException;
+
 
     User updateUserName(Long userId, String fullName) throws UserNotFoundException;
 

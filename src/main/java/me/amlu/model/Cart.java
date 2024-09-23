@@ -32,6 +32,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static me.amlu.common.SecurityUtil.getAuthenticatedUser;
 
@@ -67,7 +68,7 @@ public class Cart {
     @OneToMany(mappedBy = "cart", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @Filter(name = "deletedFilter")
-    private List<CartItem> cartItems = new ArrayList<>(); //<Food, Quantity>
+    private CopyOnWriteArrayList<CartItem> cartItems = new CopyOnWriteArrayList<>(); //<Food, Quantity>
 
     @PreRemove
     private void preRemove() {

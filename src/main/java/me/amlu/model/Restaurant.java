@@ -16,22 +16,24 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
 import lombok.*;
 import me.amlu.config.SensitiveData;
+import me.amlu.repository.RestaurantRepository;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.proxy.HibernateProxy;
+import org.hibernate.validator.constraints.URL;
 import org.joou.ULong;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static me.amlu.common.SecurityUtil.getAuthenticatedUser;
 
@@ -49,7 +51,11 @@ import static me.amlu.common.SecurityUtil.getAuthenticatedUser;
 @Cacheable
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.NONSTRICT_READ_WRITE)
 @AllArgsConstructor
-public class Restaurant {
+@NoArgsConstructor(force = true)
+public class Restaurant extends AnonymizedData {
+
+    @Transient
+    private final RestaurantRepository restaurantRepository;
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -64,6 +70,11 @@ public class Restaurant {
 
     @OneToOne
     private User owner;
+
+    @OneToMany
+    @JsonIgnore
+    @ToString.Exclude
+    private CopyOnWriteArrayList<User> restaurantStaff = new CopyOnWriteArrayList<>();
 
     @Column(nullable = false)
     @NotEmpty(message = "Restaurant name cannot be blank.")
@@ -94,8 +105,9 @@ public class Restaurant {
 
     @OneToMany(fetch = FetchType.LAZY, mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
-    private List<Order> orders = new ArrayList<>();
+    private CopyOnWriteArrayList<Order> orders = new CopyOnWriteArrayList<>();
 
+    @URL
     @NotEmpty
     @Size(max = 8191)
     @ElementCollection
@@ -103,7 +115,7 @@ public class Restaurant {
     @Size(max = 8191)
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
-    private List<String> images;
+    private CopyOnWriteArrayList<String> imagesURL = new CopyOnWriteArrayList<>();
 
     @Column(nullable = false)
     @NotEmpty
@@ -112,7 +124,12 @@ public class Restaurant {
     @JsonIgnore
     @OneToMany(mappedBy = "restaurant", cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
-    private List<Food> foods = new ArrayList<>();
+    private CopyOnWriteArrayList<Food> foods = new CopyOnWriteArrayList<>();
+
+    public Restaurant(RestaurantRepository restaurantRepository, RestaurantRepository restaurantRepository1) {
+        super();
+        this.restaurantRepository = restaurantRepository1;
+    }
 
     @PreRemove
     private void preRemove() {
@@ -153,6 +170,18 @@ public class Restaurant {
     private User deletedBy;
 
     @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
+    @Column(nullable = true, name = "restaurant_data_exported_at", columnDefinition = "DATETIME ZONE='UTC'")
+    private Instant restaurantDataExportedAt;
+
+    @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
+    @Column(nullable = false, name = "is_restaurant_data_exported")
+    private boolean isRestaurantDataExported;
+
+    @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
+    @Column(nullable = true, name = "restaurant_data_exported_key")
+    private String restaurantDataExportedKey;
+
+    @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
     @Column(nullable = true, name = "anonymized_at", columnDefinition = "DATETIME ZONE='UTC'")
     private Instant anonymizedAt;
 
@@ -188,6 +217,14 @@ public class Restaurant {
     @Override
     public final int hashCode() {
         return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
+    }
+
+    @Override
+    @Async
+    @Transactional
+    public void delete() {
+        assert restaurantRepository != null;
+        restaurantRepository.deleteById(this.getId());
     }
 
 }

@@ -13,16 +13,16 @@ package me.amlu.service;
 import lombok.NonNull;
 import me.amlu.model.Category;
 import me.amlu.model.Restaurant;
-import me.amlu.model.User;
 import me.amlu.repository.CategoryRepository;
-import me.amlu.service.Exceptions.CategoryNotFoundException;
-import me.amlu.service.Exceptions.DuplicateCategoryException;
-import org.springframework.security.core.context.SecurityContextHolder;
+import me.amlu.service.exceptions.CategoryNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+
+import static me.amlu.common.SecurityUtil.getAuthenticatedUser;
 
 @Service
 public class CategoryServiceImp implements CategoryService {
@@ -40,6 +40,7 @@ public class CategoryServiceImp implements CategoryService {
     }
 
     @Override
+    @Transactional
     public Category createCategory(@NonNull String categoryName, Long userId) throws Exception {
 
         Optional<Restaurant> restaurant = restaurantService.getRestaurantsByUserId(userId);
@@ -51,8 +52,8 @@ public class CategoryServiceImp implements CategoryService {
         category.setRestaurant(restaurant.orElse(null));
         category.setCreatedAt(Instant.now());
         category.setUpdatedAt(Instant.now());
-        category.setCreatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
-        category.setUpdatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        category.setCreatedBy(getAuthenticatedUser());
+        category.setUpdatedBy(getAuthenticatedUser());
         category.setDeletedAt(null);
         category.setDeletedBy(null);
 
@@ -65,8 +66,8 @@ public class CategoryServiceImp implements CategoryService {
     public List<Category> findCategoryByRestaurantId(Long id) throws Exception {
 
 //        Optional<Restaurant> restaurant = restaurantService.getRestaurantsByUserId(userId);
-//        return categoryRepository.findCategoryByRestaurantId(restaurant.map(Restaurant::getId).orElse(null));
-//        Optional<Restaurant> restaurant = Optional.ofNullable(restaurantService.findRestaurantById(id));
+//        return categoryRepository.findCategoryByRestaurantId(restaurant.map(Restaurant::getCategory_id).orElse(null));
+//        Optional<Restaurant> restaurant = Optional.ofNullable(restaurantService.findRestaurantById(category_id));
                 Optional<Restaurant> restaurant = restaurantService.getRestaurantsByUserId(id);
         return categoryRepository.findByRestaurantId(id);
 
@@ -96,21 +97,23 @@ public class CategoryServiceImp implements CategoryService {
 
     @Override
     public Category findSimilarCategory(String categoryName) {
-        return categoryRepository.findSimilarCategory(categoryName);
+        return categoryRepository.findSimilarCategoryIgnoreCase(categoryName);
     }
 
     @Override
+    @Transactional
     public Category updateCategory(Long categoryId, @NonNull String categoryName, Long userId) throws Exception {
 
         Category category = findCategoryById(categoryId);
         category.setCategoryName(categoryName);
         category.setUpdatedAt(Instant.now());
-        category.setUpdatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        category.setUpdatedBy(getAuthenticatedUser());
 
         return categoryRepository.save(category);
     }
 
     @Override
+    @Transactional
     public void deleteCategory(Long categoryId) throws Exception {
 
         Optional<Category> optionalCategory = categoryRepository.findById(categoryId);
@@ -119,6 +122,6 @@ public class CategoryServiceImp implements CategoryService {
         }
         categoryRepository.deleteById(categoryId);
         optionalCategory.get().setDeletedAt(Instant.now());
-        optionalCategory.get().setDeletedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        optionalCategory.get().setDeletedBy(getAuthenticatedUser());
     }
 }

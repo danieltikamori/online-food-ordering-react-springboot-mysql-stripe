@@ -14,28 +14,30 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.i18n.phonenumbers.Phonenumber;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 import me.amlu.config.SensitiveData;
 import me.amlu.config.StrongPassword;
 import me.amlu.dto.RestaurantDto;
+import me.amlu.repository.UserRepository;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.proxy.HibernateProxy;
-import org.joou.UInteger;
 import org.joou.ULong;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static me.amlu.common.SecurityUtil.getAuthenticatedUser;
 
@@ -51,9 +53,12 @@ import static me.amlu.common.SecurityUtil.getAuthenticatedUser;
 @Getter
 @Setter
 @ToString
-@RequiredArgsConstructor
+//@RequiredArgsConstructor
 @AllArgsConstructor
-public class User {
+@NoArgsConstructor(force = true)
+public class User extends AnonymizedData {
+    @Transient
+    private final UserRepository userRepository;
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -100,17 +105,22 @@ public class User {
     @JsonIgnore
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "customer")
     @ToString.Exclude
-    private List<Order> orders = new ArrayList<>();
+    private CopyOnWriteArrayList<Order> orders = new CopyOnWriteArrayList<>();
 
     @ElementCollection
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
-    private List<RestaurantDto> favoriteRestaurants = new ArrayList<>();
+    private CopyOnWriteArrayList<RestaurantDto> favoriteRestaurants = new CopyOnWriteArrayList<>();
 
     @OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
     @ToString.Exclude
     @Column(length = 8191)
-    private List<Address> addresses = new ArrayList<>();
+    private CopyOnWriteArrayList<Address> addresses = new CopyOnWriteArrayList<>();
+
+    public User(UserRepository userRepository) {
+        super();
+        this.userRepository = userRepository;
+    }
 
     @PreRemove
     private void preRemove() {
@@ -151,6 +161,18 @@ public class User {
     private User deletedBy;
 
     @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
+    @Column(nullable = true, name = "user_data_exported_at", columnDefinition = "DATETIME ZONE='UTC'")
+    private Instant userDataExportedAt;
+
+    @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
+    @Column(nullable = false, name = "is_user_data_exported")
+    private boolean isUserDataExported;
+
+    @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
+    @Column(nullable = true, name = "user_data_exported_key")
+    private String userDataExportedKey;
+
+    @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
     @Column(nullable = true, name = "anonymized_at", columnDefinition = "DATETIME ZONE='UTC'")
     private Instant anonymizedAt;
 
@@ -171,6 +193,7 @@ public class User {
     @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
     @Column(nullable = true, name = "anonymized_data_exported_key")
     private String anonymizedDataExportedKey;
+
 
     @Override
     public final boolean equals(Object o) {
@@ -194,4 +217,10 @@ public class User {
         return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
     }
 
+    @Override
+    @Async
+    @Transactional
+    public void delete() {
+        userRepository.deleteById(this.getId());
+    }
 }

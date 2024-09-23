@@ -34,6 +34,7 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import static me.amlu.common.SecurityUtil.getAuthenticatedUser;
 
@@ -80,7 +81,7 @@ public class IngredientCategory {
     @NotNull
     @NotEmpty(message = "Ingredients cannot be blank.")
     @OneToMany(mappedBy = "ingredientCategory", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<IngredientsItems> ingredients = Collections.synchronizedSet(new LinkedHashSet<>());
+    private CopyOnWriteArraySet<IngredientsItems> ingredients = new CopyOnWriteArraySet<>();
 
     @PreRemove
     private void preRemove() {

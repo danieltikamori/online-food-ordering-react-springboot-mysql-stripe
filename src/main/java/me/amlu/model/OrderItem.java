@@ -18,7 +18,6 @@ import jakarta.validation.constraints.Size;
 import lombok.*;
 import me.amlu.config.SensitiveData;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.proxy.HibernateProxy;
@@ -31,7 +30,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.Instant;
 import java.util.Objects;
-import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import static me.amlu.common.SecurityUtil.getAuthenticatedUser;
 
@@ -77,14 +77,14 @@ public class OrderItem {
     private Order order;
 
     //Maybe not needed
-    @ManyToMany
+    @ManyToMany(cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
     @ToString.Exclude
-    private IngredientCategory ingredientCategory;
+    private CopyOnWriteArrayList<IngredientCategory> ingredientCategory;
 
     @ManyToMany(cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
     @Size(max = 8191)
     @ToString.Exclude
-    private Set<IngredientsItems> ingredients;
+    private CopyOnWriteArraySet<IngredientsItems> ingredients;
 
     @PreRemove
     private void preRemove() {

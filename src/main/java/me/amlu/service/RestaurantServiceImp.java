@@ -11,6 +11,7 @@
 package me.amlu.service;
 
 import lombok.NonNull;
+import lombok.extern.slf4j.Slf4j;
 import me.amlu.dto.RestaurantDto;
 import me.amlu.model.Address;
 import me.amlu.model.Restaurant;
@@ -19,32 +20,46 @@ import me.amlu.repository.AddressRepository;
 import me.amlu.repository.RestaurantRepository;
 import me.amlu.repository.UserRepository;
 import me.amlu.request.CreateRestaurantRequest;
-import me.amlu.service.Exceptions.RestaurantNotFoundException;
+import me.amlu.service.exceptions.RestaurantNotFoundException;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.lang.reflect.Field;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
+import static me.amlu.common.SecurityUtil.getAuthenticatedUser;
+
+@Slf4j
 @Service
 public class RestaurantServiceImp implements RestaurantService {
 
     private final RestaurantRepository restaurantRepository;
     private final AddressRepository addressRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
-    public RestaurantServiceImp(RestaurantRepository restaurantRepository, AddressRepository addressRepository, UserRepository userRepository) {
+    public static final Logger logger = LogManager.getLogger(RestaurantServiceImp.class);
+
+
+    public RestaurantServiceImp(RestaurantRepository restaurantRepository, AddressRepository addressRepository, UserRepository userRepository, NotificationService notificationService) {
         this.restaurantRepository = restaurantRepository;
         this.addressRepository = addressRepository;
         this.userRepository = userRepository;
+        this.notificationService = notificationService;
     }
 
     @Override
+    @Transactional
     public Restaurant createRestaurant(@NonNull CreateRestaurantRequest restaurantRequest, User user) {
 
         try {
@@ -57,7 +72,7 @@ public class RestaurantServiceImp implements RestaurantService {
             restaurant.setDescription(restaurantRequest.getDescription());
             restaurant.setContactInformation(restaurantRequest.getContactInformation());
             restaurant.setOpeningHours(restaurantRequest.getOpeningHours());
-            restaurant.setImages(restaurantRequest.getImages());
+            restaurant.setImagesURL((CopyOnWriteArrayList<String>) restaurantRequest.getImages());
             restaurant.setCreatedAt(Instant.now());
             restaurant.setUpdatedAt(Instant.now());
             restaurant.setCreatedBy(user);
@@ -66,16 +81,17 @@ public class RestaurantServiceImp implements RestaurantService {
 
             return restaurantRepository.save(restaurant);
         } catch (ConstraintViolationException e) {
-
+            logger.error("Constraint violation occurred: {}", e.getMessage());
             throw new RuntimeException("Constraint violation occurred: " + e.getMessage(), e);
         } catch (DataIntegrityViolationException e) {
-
+            logger.error("Data integrity violation occurred: {}", e.getMessage());
+            notificationService.sendNotification("Data integrity violation occurred", e.getMessage());
             throw new RuntimeException("Data integrity violation occurred: " + e.getMessage(), e);
         }
     }
 
-    // RestaurantServiceImp.java
     @Override
+    @Transactional
     public Restaurant updateRestaurant(Long restaurantId, @NonNull CreateRestaurantRequest updatedRestaurant) throws Exception {
         Optional<Restaurant> optionalRestaurant = restaurantRepository.findById(restaurantId);
         Restaurant restaurant = optionalRestaurant.orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found with ID: " + restaurantId));
@@ -94,55 +110,66 @@ public class RestaurantServiceImp implements RestaurantService {
                 }
             }
         }
-//        Restaurant restaurant = findRestaurantById(restaurantId);
-//        if(restaurant.getCuisineType() != null) {
-//            restaurant.setCuisineType(updatedRestaurant.getCuisineType());
-//        }
-//        if(restaurant.getDescription() != null) {
-//            restaurant.setDescription(updatedRestaurant.getDescription());
-//        }
-//        if(restaurant.getContactInformation() != null) {
-//            restaurant.setContactInformation(updatedRestaurant.getContactInformation());
-//        }
-//        if(restaurant.getOpeningHours() != null) {
-//            restaurant.setOpeningHours(updatedRestaurant.getOpeningHours());
-//        }
-//        if(restaurant.getImages() != null) {
-//            restaurant.setImages(updatedRestaurant.getImages());
-//        }
-//        if(restaurant.getRestaurantName() != null) {
-//            restaurant.setRestaurantName(updatedRestaurant.getRestaurantName());
-//        }
 
         restaurant.setUpdatedAt(Instant.now());
-        restaurant.setUpdatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
-
+        restaurant.setUpdatedBy(getAuthenticatedUser());
 
         return restaurantRepository.save(restaurant);
     }
 
 
     @Override
+    @Transactional
     public Restaurant updateRestaurantStatus(Long restaurantId) throws Exception {
 
-        Restaurant restaurant = findRestaurantById(restaurantId);
-        restaurant.setOpenNow(!restaurant.isOpenNow());
-        restaurant.setUpdatedAt(Instant.now());
-        restaurant.setUpdatedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+        try {
+            Restaurant restaurant = findRestaurantById(restaurantId);
+            restaurant.setOpenNow(!restaurant.isOpenNow());
+            restaurant.setUpdatedAt(Instant.now());
+            restaurant.setUpdatedBy(getAuthenticatedUser());
 
-        return restaurantRepository.save(restaurant);
+            return restaurantRepository.save(restaurant);
+        } catch (Exception e) {
+            throw new RestaurantNotFoundException("Restaurant not found with ID: " + restaurantId);
+        }
     }
 
     @Override
+    @Transactional
     public void deleteRestaurant(Long restaurantId) throws Exception {
 
-        Optional<Restaurant> optionalRestaurant = restaurantRepository.findById(restaurantId);
-        Restaurant restaurant = optionalRestaurant.orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found with ID: " + restaurantId));
+        try {
+            Optional<Restaurant> optionalRestaurant = restaurantRepository.findById(restaurantId);
+            Restaurant restaurant = optionalRestaurant.orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found with ID: " + restaurantId));
 
-        restaurant.setDeletedAt(Instant.now());
-        restaurant.setDeletedBy((User) SecurityContextHolder.getContext().getAuthentication().getPrincipal());
+            restaurant.setDeletedAt(Instant.now());
+            restaurant.setDeletedBy(getAuthenticatedUser());
 
-        restaurantRepository.delete(restaurant);
+            restaurantRepository.delete(restaurant);
+        } catch (DataIntegrityViolationException e) {
+            logger.error("Data integrity violation occurred when deleting restaurant: {}", e.getMessage());
+            notificationService.sendNotification("Data integrity violation occurred when deleting restaurant.", e.getMessage());
+            throw new RuntimeException("Data integrity violation occurred: " + e.getMessage(), e);
+        }
+    }
+
+    @Override
+    @PreAuthorize("hasRole('ROLE_ADMIN') or hasRole('ROLE_ROOT')")
+    @Async
+    @Transactional
+    public void permanentlyDeleteRestaurant(Long restaurantId) throws Exception {
+
+        try {
+            Optional<Restaurant> optionalRestaurant = restaurantRepository.findById(restaurantId);
+            Restaurant restaurant = optionalRestaurant.orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found with ID: " + restaurantId));
+
+            restaurantRepository.deleteById(restaurantId);
+        } catch (DataIntegrityViolationException e) {
+            log.error("Data integrity violation occurred: {}", e.getMessage());
+            logger.error("Data integrity violation occurred when permanently deleting restaurant: {}", e.getMessage());
+            notificationService.sendNotification("Data integrity violation occurred", e.getMessage());
+            throw new RuntimeException("Data integrity violation occurred: " + e.getMessage(), e);
+        }
     }
 
     @Override
@@ -153,65 +180,94 @@ public class RestaurantServiceImp implements RestaurantService {
     @Override
     public Restaurant findRestaurantById(Long restaurantId) throws RestaurantNotFoundException {
 
+        try {
             Optional<Restaurant> optionalRestaurant = restaurantRepository.findById(restaurantId);
-
-            if (optionalRestaurant.isPresent()) {
-                return optionalRestaurant.get();
-            } else {
-                throw new RestaurantNotFoundException("Restaurant not found with ID: " + restaurantId);
-            }
+            return optionalRestaurant.orElseThrow(() -> new RestaurantNotFoundException("Restaurant not found with ID: " + restaurantId));
+        } catch (Exception e) {
+            throw new RestaurantNotFoundException("Restaurant not found with ID: " + restaurantId);
+        }
     }
 
     @Override
-    public List<Restaurant> searchRestaurant(String keyword) {
+    public List<Restaurant> searchRestaurant(String keyword) throws RestaurantNotFoundException {
 
-        return restaurantRepository.findBySearchQuery(keyword)
+        try{
+        return restaurantRepository.findBySearchQueryIgnoreCase(keyword)
                 .stream()
                 .filter(restaurant -> restaurant.getDeletedAt() == null) // Filter out deleted restaurants
                 .collect(Collectors.toList());
+        } catch (Exception e) {
+            throw new RestaurantNotFoundException("Restaurant not found with ID: " + keyword);
+        }
     }
 
     @Override
-    public Optional<Restaurant> getRestaurantsByUserId(Long userId) {
-        return restaurantRepository.findByOwnerId(userId);
+    public Optional<Restaurant> getRestaurantsByUserId(Long userId) throws RestaurantNotFoundException {
+        try {
+            return restaurantRepository.findByOwnerId(userId);
+        }
+        catch (Exception e) {
+            throw new RestaurantNotFoundException("Restaurant not found with ID: " + userId);}
     }
 
 
     @Override
-    public List<Restaurant> getRestaurantsByCategory(String category) throws Exception {
-        return List.of();
+    public Optional<Object> getRestaurantsByCategory(String category) throws Exception {
+
+        try{
+            return restaurantRepository.findByCategory(category);
+        } catch (Exception e) {
+            throw new RestaurantNotFoundException("Restaurant not found with ID: " + category);
+        }
+
     }
 
     @Override
     public List<Restaurant> getRestaurantsByCuisineType(String cuisineType) throws Exception {
-        return List.of();
+        try {
+            return restaurantRepository.findByCuisineType(cuisineType);
+        } catch (Exception e) {
+            throw new RestaurantNotFoundException("Restaurant not found with ID: " + cuisineType);
+        }
     }
 
     @Override
-    public List<Restaurant> getRestaurantsByAddress(String address) throws Exception {
-        return List.of();
+    public List<Restaurant> getRestaurantsByCity(String city) throws Exception {
+        try {
+            return restaurantRepository.findByAddress_City(city);
+        } catch (Exception e) {
+            throw new RestaurantNotFoundException("Restaurant not found with ID: " + city);
+        }
     }
 
     @Override
     public List<Restaurant> getRestaurantsByOpeningHours(String openingHours) throws Exception {
-        return List.of();
+
+        // TODO: Implement search by opening hours
+        try {
+            return restaurantRepository.findByOpeningHours(openingHours);
+        } catch (Exception e) {
+            throw new RestaurantNotFoundException("Restaurant not found with ID: " + openingHours);
+        }
     }
 
     @Override
+    @Transactional
     public RestaurantDto addToFavorites(Long restaurantId, User user) throws Exception {
 
         Restaurant restaurant = findRestaurantById(restaurantId);
 
         RestaurantDto restaurantDto = new RestaurantDto();
         restaurantDto.setDescription(restaurant.getDescription());
-        restaurantDto.setTitle(restaurant.getRestaurantName());
-        restaurantDto.setImages(restaurant.getImages());
+        restaurantDto.setRestaurantName(restaurant.getRestaurantName());
+        restaurantDto.setImagesURL(restaurant.getImagesURL());
         restaurantDto.setRestaurant_id(restaurantId);
 
-        if(user.getFavoriteRestaurants().contains(restaurantDto)) {
+        if (user.getFavoriteRestaurants().contains(restaurantDto)) {
             user.getFavoriteRestaurants().remove(restaurantDto);
+        } else {
+            user.getFavoriteRestaurants().add(restaurantDto);
         }
-        else user.getFavoriteRestaurants().add(restaurantDto);
 
 //        ## Another approach instead of the if statement above that required
 //        to override the equals and hashCode methods:

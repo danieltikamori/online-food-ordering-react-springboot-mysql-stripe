@@ -8,50 +8,46 @@
  * Please contact the copyright holder at fuiwzchps@mozmail.com for any inquiries or requests for authorization to use the software.
  */
 
-package me.amlu.model;
+package me.amlu.request;
 
-import com.google.i18n.phonenumbers.Phonenumber;
-import jakarta.persistence.Column;
-import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.Size;
-import lombok.AllArgsConstructor;
+import jakarta.validation.constraints.Positive;
 import lombok.Data;
-import lombok.NoArgsConstructor;
-import me.amlu.config.Phone;
-import org.hibernate.validator.constraints.URL;
+import me.amlu.model.Category;
+import me.amlu.model.IngredientsItems;
+import me.amlu.model.User;
 
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.List;
+import java.util.Set;
 
 @Data
-@NoArgsConstructor
-@AllArgsConstructor
-public class ContactInformation {
+public class UpdateFoodRequest {
 
-    @Email
+    @NotEmpty(message = "Name cannot be blank.")
+    private String name;
+
+    private String description;
+
+    @NotEmpty(message = "Category cannot be empty.")
+    private Category foodCategory;
+
+    @Positive(message = "Price must be a positive number.")
+    private BigDecimal price;
+
+    private List<String> images;
+
+    private boolean isAvailable;
+    private boolean isVegetarian;
+    private boolean isSeasonal;
+
+    private Set<IngredientsItems> ingredients;
+
     @NotEmpty
-    @Column(nullable = false)
-    @Size(max = 255)
-    private String email;
+    private Instant updatedAt;
 
-    @Phone
     @NotEmpty
-    @Column(nullable = false)
-    @Size(max = 31)
-    private Phonenumber.PhoneNumber phoneNumber;
+    private User updatedBy;
 
-    @Phone
-    @Size(max = 31)
-    private Phonenumber.PhoneNumber mobile;
-
-    @URL
-    @Size(max = 255)
-    private String website;
-
-    @URL
-    @Size(max = 255)
-    private String twitter;
-
-    @URL
-    @Size(max = 255)
-    private String instagram;
 }

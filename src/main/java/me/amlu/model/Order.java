@@ -15,8 +15,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
 import lombok.*;
 import me.amlu.config.SensitiveData;
+import me.amlu.repository.OrderRepository;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.proxy.HibernateProxy;
@@ -29,8 +29,8 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import static me.amlu.common.SecurityUtil.getAuthenticatedUser;
 
@@ -40,15 +40,19 @@ import static me.amlu.common.SecurityUtil.getAuthenticatedUser;
 @FilterDef(name = "deletedFilter", defaultCondition = "deleted_at IS NULL")
 @FilterDef(name = "adminFilter", defaultCondition = "1=1")
 @Table(name = "orders", indexes = @Index(name = "customer_deleted_at_index", columnList = "customer_id, deleted_at"),
-        uniqueConstraints = @UniqueConstraint(columnNames = {"customer_id","idempotency_key"}))
-@Cacheable(true)
+        uniqueConstraints = @UniqueConstraint(columnNames = {"customer_id", "idempotency_key"}))
+@Cacheable
 @org.hibernate.annotations.Cache(usage = CacheConcurrencyStrategy.READ_WRITE)
 @Getter
 @Setter
 @ToString
-@RequiredArgsConstructor
+//@RequiredArgsConstructor
 @AllArgsConstructor
-public class Order {
+@NoArgsConstructor(force = true)
+public class Order extends AnonymizedData {
+
+    @Transient
+    private final OrderRepository orderRepository;
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
@@ -74,6 +78,61 @@ public class Order {
     @Column(nullable = false)
     @Size(max = 63)
     private OrderStatus orderStatus;
+
+    @NotEmpty
+    @ManyToOne
+    @JoinColumn(name = "delivery_address_id")
+    private Address deliveryAddress;
+
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
+    @ToString.Exclude
+    private CopyOnWriteArrayList<OrderItem> orderItems;
+
+//    private Payment payment;
+
+    @Min(1)
+    @Max(8191)
+    @Column(nullable = false)
+    @NotNull
+    @NotEmpty
+    @Size(max = 8191)
+    @Positive(message = "Total items must be a positive number.")
+    private int totalItems;
+
+    @Min(0)
+    @Max(8191)
+    @Column(nullable = false)
+    @NotNull
+    @NotEmpty
+    @Size(max = 8191)
+    @PositiveOrZero(message = "Total amount must be a positive number.")
+    private BigDecimal totalAmount;
+
+    public Order(OrderRepository orderRepository) {
+        super();
+        this.orderRepository = orderRepository;
+        this.orderItems = new CopyOnWriteArrayList<>();
+    }
+
+    public boolean canTransitionTo(OrderStatus newStatus) {
+        return switch (this.orderStatus) {
+            case PENDING -> newStatus == OrderStatus.CANCELLED
+                    || newStatus == OrderStatus.OUT_FOR_DELIVERY;
+            case OUT_FOR_DELIVERY -> newStatus == OrderStatus.DELIVERED;
+            case DELIVERED -> newStatus == OrderStatus.COMPLETED;
+            default -> false;
+        };
+    }
+
+    public boolean cancel() {
+        if (this.orderStatus == OrderStatus.PENDING) {
+            this.orderStatus = OrderStatus.CANCELLED;
+            this.setUpdatedAt(Instant.now());
+            this.setUpdatedBy(getAuthenticatedUser());
+            return true; // Cancellation successful
+        }
+        return false; // Cancellation not allowed in the current state
+    }
 
     @PreRemove
     private void preRemove() {
@@ -117,54 +176,18 @@ public class Order {
     @JoinColumn(nullable = true, name = "deleted_by_id")
     private User deletedBy;
 
-    @NotEmpty
-    @ManyToOne
-    @JoinColumn(name = "delivery_address_id")
-    private Address deliveryAddress;
+    @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
+    @Column(nullable = true, name = "order_data_exported_at", columnDefinition = "DATETIME ZONE='UTC'")
+    private Instant orderDataExportedAt;
 
-    @OneToMany(fetch = FetchType.LAZY, mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-    @ToString.Exclude
-    private List<OrderItem> orderItems;
+    @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
+    @Column(nullable = true, name = "is_order_data_exported")
+    private boolean isOrderDataExported;
 
-//    private Payment payment;
+    @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
+    @Column(nullable = true, name = "order_data_exported_key")
+    private String orderDataExportedKey;
 
-    @Min(1)
-    @Max(8191)
-    @Column(nullable = false)
-    @NotNull
-    @NotEmpty
-    @Size(max = 8191)
-    @Positive(message = "Total items must be a positive number.")
-    private int totalItems;
-
-    @Min(0)
-    @Max(8191)
-    @Column(nullable = false)
-    @NotNull
-    @NotEmpty
-    @Size(max = 8191)
-    @PositiveOrZero(message = "Total amount must be a positive number.")
-    private BigDecimal totalAmount;
-
-    public boolean canTransitionTo(OrderStatus newStatus) {
-        return switch (this.orderStatus) {
-            case PENDING -> newStatus == OrderStatus.CANCELLED
-                    || newStatus == OrderStatus.OUT_FOR_DELIVERY;
-            case OUT_FOR_DELIVERY -> newStatus == OrderStatus.DELIVERED;
-            case DELIVERED -> newStatus == OrderStatus.COMPLETED;
-            default -> false;
-        };
-    }
-
-    public boolean cancel() {
-        if (this.orderStatus == OrderStatus.PENDING) {
-            this.orderStatus = OrderStatus.CANCELLED;
-            this.setUpdatedAt(Instant.now());
-            this.setUpdatedBy(getAuthenticatedUser());
-            return true; // Cancellation successful
-        }
-        return false; // Cancellation not allowed in the current state
-    }
 
     @Override
     public final boolean equals(Object o) {
@@ -180,5 +203,10 @@ public class Order {
     @Override
     public final int hashCode() {
         return this instanceof HibernateProxy ? ((HibernateProxy) this).getHibernateLazyInitializer().getPersistentClass().hashCode() : getClass().hashCode();
+    }
+
+    @Override
+    public void delete() {
+        orderRepository.deleteById(this.getId());
     }
 }

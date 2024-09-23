@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import static me.amlu.common.SecurityUtil.getAuthenticatedUser;
 
@@ -91,7 +92,7 @@ public class CartItem {
             inverseJoinColumns = @JoinColumn(name = "ingredient_id")
     )
     @ToString.Exclude
-    private Set<IngredientsItems> ingredients = Collections.synchronizedSet(new LinkedHashSet<>());
+    private CopyOnWriteArraySet<IngredientsItems> ingredients;
 
     @PreRemove
     private void preRemove() {

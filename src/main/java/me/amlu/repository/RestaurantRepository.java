@@ -32,4 +32,38 @@ public interface RestaurantRepository extends BaseRepository<Restaurant, Long> {
     boolean existsByOwnerId(Long userId);
 
     List<Restaurant> findByDeletedAtBefore(Instant anonymizationThreshold);
+
+
+//    TO TEST, CHECK
+    @Query("SELECT r.id AS id, r.name AS name, r.cuisineType AS cuisineType, i AS imageUrl " +
+            "FROM Restaurant r LEFT JOIN r.foods f LEFT JOIN r.imagesURL i " + // JOIN FETCH for images
+            "WHERE r.deletedAt IS NULL " + // Soft delete handling
+            "GROUP BY r.id")
+    List<RestaurantView> findAllRestaurants();
+    
+    void getDeletedAt(Long restaurantId);
+
+    void delete(Long restaurantId);
+
+    void deleteAllByDeletedAtBefore(Instant deletionThreshold);
+
+    Optional<Object> findByCategory(String category);
+
+    List<Restaurant> findByCuisineType(String cuisineType);
+
+    List<Restaurant> findByAddress_City(String city);
+
+    List<Restaurant> findByOpeningHours(String openingHours);
+
+    interface RestaurantView { // Projection interface defined within the repository
+        Long getId();
+
+        String getName();
+
+        String getCuisineType();
+
+        Double getAverageRating();
+
+        String getImageUrl();
+    }
 }

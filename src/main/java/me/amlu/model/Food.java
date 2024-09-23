@@ -12,15 +12,17 @@ package me.amlu.model;
 
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 import me.amlu.config.SensitiveData;
 import org.hibernate.annotations.CacheConcurrencyStrategy;
-import org.hibernate.annotations.Filter;
 import org.hibernate.annotations.FilterDef;
 import org.hibernate.annotations.SoftDelete;
 import org.hibernate.proxy.HibernateProxy;
-import org.joou.UInteger;
+import org.hibernate.validator.constraints.URL;
 import org.joou.ULong;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
@@ -30,7 +32,9 @@ import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.util.*;
+import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 import static me.amlu.common.SecurityUtil.getAuthenticatedUser;
 
@@ -80,10 +84,10 @@ public class Food {
     @PositiveOrZero(message = "Price must be a positive number.")
     private BigDecimal price;
 
-    @Column(length = 8191)
+    @URL
     @Size(max = 8191)
     @ElementCollection
-    private List<String> images;
+    private CopyOnWriteArrayList<String> images;
 
     private boolean isAvailable;
 
@@ -92,12 +96,13 @@ public class Food {
     private Restaurant restaurant;
 
     private boolean isVegetarian;
+
     private boolean isSeasonal;
 
     @ManyToMany(cascade = {CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH})
     @Size(max = 8191)
     @ToString.Exclude
-    private Set<IngredientsItems> ingredients = Collections.synchronizedSet(new LinkedHashSet<>());
+    private CopyOnWriteArraySet<IngredientsItems> ingredients = new CopyOnWriteArraySet<>();
 
     @PreRemove
     private void preRemove() {

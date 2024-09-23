@@ -10,6 +10,7 @@
 
 package me.amlu.controller;
 
+import jakarta.validation.Valid;
 import me.amlu.model.IngredientCategory;
 import me.amlu.model.IngredientsItems;
 import me.amlu.request.IngredientCategoryRequest;
@@ -19,11 +20,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.validation.Valid;
-
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CopyOnWriteArraySet;
 
 @RestController
 @RequestMapping("/api/v1/admin/ingredients")
@@ -38,12 +36,13 @@ public class IngredientController {
     @PostMapping("/category")
     public ResponseEntity<IngredientCategory> createIngredientCategory(
             @Valid @RequestBody IngredientCategoryRequest request
-            ) throws Exception {
+    ) throws Exception {
 
         IngredientCategory category = ingredientsService.createIngredientCategory(request.getCategoryName(), request.getRestaurantId());
 
         return new ResponseEntity<>(category, HttpStatus.CREATED);
     }
+
     @PostMapping("/items")
     public ResponseEntity<IngredientsItems> createIngredientsItems(
             @Valid @RequestBody IngredientRequest request
@@ -90,23 +89,22 @@ public class IngredientController {
 
 
     @GetMapping("/restaurant/{id}")
-    public ResponseEntity<Set<IngredientsItems>> getRestaurantsIngredients(
+    public ResponseEntity<CopyOnWriteArraySet<IngredientsItems>> getRestaurantsIngredients(
             @PathVariable Long id
     ) throws Exception {
-        Set<IngredientsItems> items = Collections.synchronizedSet(ingredientsService.findRestaurantsIngredients(id));
+        CopyOnWriteArraySet<IngredientsItems> items = (CopyOnWriteArraySet<IngredientsItems>) ingredientsService.findRestaurantsIngredients(id);
 
         return new ResponseEntity<>(items, HttpStatus.OK);
     }
 
     @GetMapping("/restaurant/{id}/category")
-    public ResponseEntity<List<IngredientCategory>> getRestaurantCategory(
+    public ResponseEntity<CopyOnWriteArrayList<IngredientCategory>> getRestaurantCategory(
             @PathVariable Long id
     ) throws Exception {
-        List<IngredientCategory> categories = ingredientsService.findIngredientCategoryByRestaurantId(id);
+        CopyOnWriteArrayList<IngredientCategory> categories = (CopyOnWriteArrayList<IngredientCategory>) ingredientsService.findIngredientCategoryByRestaurantId(id);
 
         return new ResponseEntity<>(categories, HttpStatus.OK);
     }
-
 
 
 }

@@ -39,4 +39,6 @@ public interface UserRepository extends BaseRepository<User, Long> {
     @Query("SELECT u FROM User u WHERE u.deletedAt < :anonymizationThreshold")
     List<User> findByDeletedAtBefore(Instant anonymizationThreshold);
 
+
+    void permanentlyDeleteUser(Long userId);
 }
