@@ -8,7 +8,7 @@
  * Please contact the copyright holder at fuiwzchps@mozmail.com for any inquiries or requests for authorization to use the software.
  */
 
-package me.amlu.service.Tasks;
+package me.amlu.service.tasks;
 
 import me.amlu.repository.OrderRepository;
 import me.amlu.repository.UserRepository;
@@ -38,12 +38,12 @@ public class RecordCleanupTask {
 
     @Scheduled(cron = "0 0 0 * * *") // run daily at midnight
     public void deleteDeletedRecords() throws NoSuchMethodException {
-        if (dataRetentionPolicy == null || dataRetentionPolicy.getRetentionDays() == 0) {
+        if (dataRetentionPolicy == null || dataRetentionPolicy.getRetentionDaysBeforeDatabaseRemotion() == 0) {
             // Do nothing if no retention period is configured
             return;
         }
 
-        Instant threshold = Instant.now().minus(dataRetentionPolicy.getRetentionDays(), ChronoUnit.DAYS);
+        Instant threshold = Instant.now().minus(dataRetentionPolicy.getRetentionDaysBeforeDatabaseRemotion(), ChronoUnit.DAYS);
         userRepository.deleteAllByDeletedAtBefore(threshold);
         orderRepository.deleteAllByDeletedAtBefore(threshold);
     }
