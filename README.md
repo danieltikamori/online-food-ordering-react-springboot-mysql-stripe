@@ -1,5 +1,7 @@
 # TikaFoods - Multi-vendor Online Food Ordering Application
 
+## Under development
+
 ## Overview
 
 Multivendor(multiple restaurants) food ordering application. It allows users to order food from multiple restaurants.
@@ -138,6 +140,26 @@ Log Errors Securely: Log errors appropriately, but avoid logging sensitive data.
 
    The current implementation is functional and likely performs well for a reasonable number of ingredient categories. We can further optimize it with indexing and potentially caching. The choice to use caching depends on specific performance needs and willingness to manage the added complexity.
    
+### Modular Monolith
+
+// Module 1: User Management
+com.example.usermanagement
+UserManagementModule.java
+UserRepository.java
+UserService.java
+
+// Module 2: Order Management
+com.example.ordermanagement
+OrderManagementModule.java
+OrderRepository.java
+OrderService.java
+
+// Core Kernel
+com.example.core
+CoreKernel.java
+DependencyInjection.java
+EventDrivenArchitecture.java
+
 ### Admin Panel
 
 Building an admin panel for the owner of the online food ordering application is a great way to provide control and insights into the business.
@@ -182,3 +204,14 @@ Here's a breakdown of key features and considerations for the admin panel:
    4. Develop the Frontend: Use React to build the user interface and interact with the backend APIs.
    5. Test Thoroughly: Conduct thorough testing to ensure the admin panel is functional, secure, and user-friendly.
    Remember to break down the project into smaller, manageable tasks and iterate on your development process. Good luck with building your admin panel!
+
+### Database ID
+
+Considering implement TSID (see: https://github.com/vladmihalcea/hypersistence-tsid)
+
+Consider:
+
+- Define a clear set of requirements for the tsid system, including its format, length, and any specific constraints.
+- Design a modular architecture that separates the tsid generation logic from the rest of your application.
+- Write comprehensive unit tests to ensure the tsid system behaves correctly under various scenarios.
+- Consider using a library or framework that provides a robust and tested implementation of Crockford's Base32 encoding.
