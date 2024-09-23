@@ -10,13 +10,19 @@
 
 package me.amlu.config;
 
+import me.amlu.repository.AddressRepository;
 import me.amlu.repository.OrderRepository;
+import me.amlu.repository.RestaurantRepository;
 import me.amlu.repository.UserRepository;
 import me.amlu.service.*;
-import me.amlu.service.Tasks.RecordCleanupTask;
+import me.amlu.service.tasks.RecordCleanupTask;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
+import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.security.config.annotation.authentication.configuration.EnableGlobalAuthentication;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -36,6 +42,10 @@ import java.util.List;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@EnableGlobalAuthentication
+@EnableJpaAuditing
+@EnableAsync
+@EnableReactiveMethodSecurity
 public class AppConfig {
 
     // Cross-Site Request Forgery
@@ -44,7 +54,7 @@ public class AppConfig {
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.sessionManagement(management -> management.sessionCreationPolicy(
-            SessionCreationPolicy.STATELESS))
+                        SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(
                         Authorize -> Authorize
                                 .requestMatchers("/api/v1/admin/**")
@@ -111,17 +121,35 @@ public class AppConfig {
     }
 
     @Bean
-    public DataRetentionPolicyImp dataRetentionPolicy(UserRepository userRepository, OrderRepository orderRepository) {
-        return new DataRetentionPolicyImp(userRepository, orderRepository);
+    public DataRetentionPolicyImp dataRetentionPolicy(UserRepository userRepository, OrderRepository orderRepository, RestaurantRepository restaurantRepository, AddressRepository addressRepository) {
+        return new DataRetentionPolicyImp(userRepository, orderRepository, restaurantRepository, 90, 180, anonymizationScheduler(userRepository, restaurantRepository, notificationService(), addressRepository),
+                dataDeletionScheduler(userRepository, restaurantRepository, orderRepository, notificationService()));
     }
 
     @Bean
-    public RecordCleanupTask recordCleanUpTask(UserRepository userRepository, OrderRepository orderRepository) {
-        return new RecordCleanupTask(userRepository, orderRepository, dataRetentionPolicy(userRepository, orderRepository));
+    private AnonymizationScheduler anonymizationScheduler(UserRepository userRepository, RestaurantRepository restaurantRepository, NotificationService notificationService, AddressRepository addressRepository) {
+        return new AnonymizationScheduler(anonymizationService(userRepository, restaurantRepository, notificationService, addressRepository), userRepository, restaurantRepository, notificationService(), 90);
     }
 
     @Bean
-    public DataTransferServiceImp dataTransferServiceImp(AnonymizationService anonymizationService, NotificationService notificationService, DataRetentionPolicy dataRetentionPolicy) {
-        return new DataTransferServiceImp(anonymizationService, notificationService, dataRetentionPolicy);
+    private AnonymizationService anonymizationService(UserRepository userRepository, RestaurantRepository restaurantRepository, NotificationService notificationService, AddressRepository addressRepository) {
+        return new AnonymizationServiceImp(userRepository, restaurantRepository, notificationService(), addressRepository);
+    }
+
+    @Bean
+    private DataDeletionScheduler dataDeletionScheduler(UserRepository userRepository, RestaurantRepository restaurantRepository, OrderRepository orderRepository, NotificationService notificationService) {
+        int retentionDaysBeforeDatabaseDeletion = 180; // Define the variable
+        return new DataDeletionScheduler(userRepository, restaurantRepository, orderRepository, retentionDaysBeforeDatabaseDeletion, notificationService);
+    }
+
+
+    @Bean
+    public RecordCleanupTask recordCleanUpTask(UserRepository userRepository, OrderRepository orderRepository, RestaurantRepository restaurantRepository, DataRetentionPolicy dataRetentionPolicy, AddressRepository addressRepository) {
+        return new RecordCleanupTask(userRepository, orderRepository, dataRetentionPolicy(userRepository, orderRepository, restaurantRepository, addressRepository));
+    }
+
+    @Bean
+    public AnonymizedDataTransferServiceImp dataTransferServiceImp(AnonymizationService anonymizationService, NotificationService notificationService, DataRetentionPolicy dataRetentionPolicy) {
+        return new AnonymizedDataTransferServiceImp(anonymizationService, notificationService, dataRetentionPolicy);
     }
 }

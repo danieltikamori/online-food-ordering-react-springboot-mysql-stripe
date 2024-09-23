@@ -15,9 +15,14 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.METHOD)
-public @interface DataRetentionPolicyDays {
-    int getRetentionDays();
 
+@Target(ElementType.METHOD) // Apply this annotation to methods
+@Retention(RetentionPolicy.RUNTIME) // Make it available at runtime
+public @interface DataRetentionPolicyDays {
+
+//retentionDaysBeforeAnonymization: Defines the number of days before anonymization is performed (defaults to 0 if not specified).
+    int retentionDaysBeforeAnonymization() default 91; // Default anonymization period
+
+//retentionDaysBeforeDatabaseRemotion: Defines the number of days before data is deleted from the database (defaults to 0 if not specified).
+    int retentionDaysBeforeDatabaseRemotion() default 181; // Default database removal period
 }

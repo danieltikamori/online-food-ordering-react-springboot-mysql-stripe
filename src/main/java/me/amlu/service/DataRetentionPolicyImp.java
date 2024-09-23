@@ -9,65 +9,56 @@
  */
 
 package me.amlu.service;
+
 import me.amlu.model.AnonymizedData;
 import me.amlu.repository.OrderRepository;
+import me.amlu.repository.RestaurantRepository;
 import me.amlu.repository.UserRepository;
-import me.amlu.service.Tasks.RecordCleanupTask;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 
 // Implementing a data retention policy
 public class DataRetentionPolicyImp implements DataRetentionPolicy {
 
-    private int retentionDays;
+    private final AnonymizationScheduler anonymizationScheduler;
+    private final DataDeletionScheduler dataDeletionScheduler;
 
-    private final UserRepository userRepository;
-    private final OrderRepository orderRepository;
+    public DataRetentionPolicyImp(UserRepository userRepository,
+                                  OrderRepository orderRepository,
+                                  RestaurantRepository restaurantRepository,
+                                  int retentionDaysBeforeAnonymization,
+                                  int retentionDaysBeforeDatabaseRemotion,
+                                  AnonymizationScheduler anonymizationScheduler,
+                                  DataDeletionScheduler dataDeletionScheduler) {
 
-    public DataRetentionPolicyImp(UserRepository userRepository, OrderRepository orderRepository) {
-        this.userRepository = userRepository;
-        this.orderRepository = orderRepository;
+        this.anonymizationScheduler = anonymizationScheduler;
+        this.dataDeletionScheduler = dataDeletionScheduler;
     }
 
-    public int getRetentionDays() throws NoSuchMethodException {
-        // You need to implement a way to retrieve the retention days value from the annotation
-        // One way to do this is by using Java Reflection
+    @Override
+    public int getRetentionDaysBeforeDatabaseRemotion() throws NoSuchMethodException {
         Method method = getClass().getMethod("applyRetentionPolicy", AnonymizedData.class);
         DataRetentionPolicyDays annotation = method.getAnnotation(DataRetentionPolicyDays.class);
-        return annotation.getRetentionDays();
+        if (annotation != null) {
+            return annotation.retentionDaysBeforeDatabaseRemotion();
+        } else {
+            throw new NoSuchMethodException("DataRetentionPolicyDays annotation not found on applyRetentionPolicy method.");
+        }
     }
 
-    @DataRetentionPolicyDays(getRetentionDays = 90)
     @Override
-    public void applyRetentionPolicy(AnonymizedData data, Annotation annotation) throws Exception {
-//        // Determine the retention period based on the type of data and the purpose of the collection and processing
-//        int retentionPeriod = determineRetentionPeriod(data);
-
-        if (annotation instanceof DataRetentionPolicyDays) {
-            int retentionDays = ((DataRetentionPolicyDays) annotation).getRetentionDays();
-            // Use the retentionDays value to determine the retention period
-           }
-
-        // Delete the data after the retention period has expired
-        deleteDataAfterRetentionPeriod(data, retentionDays);
+    @DataRetentionPolicyDays(retentionDaysBeforeAnonymization = 91, retentionDaysBeforeDatabaseRemotion = 181)
+    public void applyRetentionPolicy(AnonymizedData data) throws Exception {
+        // Schedule anonymization and deletion tasks
+        anonymizationScheduler.anonymizeData();
+        dataDeletionScheduler.deleteDataAfterRetentionPeriod();
     }
 
-//    private int determineRetentionPeriod(AnonymizedData data) {
-//        // Implement a mechanism to determine the retention period based on the type of data and the purpose of the collection and processing
-//        // For example, use a lookup table or a rules engine
-//        return 90; // Replace with the actual implementation
-//    }
-
     @Override
+    @Transactional
     public void deleteDataAfterRetentionPeriod(AnonymizedData data, int retentionDays) throws Exception {
-        // Implement a mechanism to delete the data after the retention period has expired
-        // For example, use a scheduler or a timer
-
-        DataRetentionPolicyImp dataRetentionPolicyImp = new DataRetentionPolicyImp(userRepository, orderRepository);
-
-        RecordCleanupTask task = new RecordCleanupTask(userRepository, orderRepository, dataRetentionPolicyImp);
-        task.deleteDeletedRecords();
+        // Implement data deletion logic based on data type
+        data.delete();
     }
-
 }

@@ -8,16 +8,7 @@
  * Please contact the copyright holder at fuiwzchps@mozmail.com for any inquiries or requests for authorization to use the software.
  */
 
-package me.amlu.service;
+package me.amlu.service.tasks;
 
-import me.amlu.model.AnonymizedData;
-
-public interface DataRetentionPolicy {
-
-    int getRetentionDaysBeforeDatabaseRemotion() throws Exception;
-
-    void applyRetentionPolicy(AnonymizedData data) throws Exception;
-
-    void deleteDataAfterRetentionPeriod(AnonymizedData data, int retentionDays) throws Exception;
-
+public class DatabaseExportTask {
 }

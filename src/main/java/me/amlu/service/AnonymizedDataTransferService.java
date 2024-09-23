@@ -10,14 +10,14 @@
 
 package me.amlu.service;
 
-import me.amlu.model.AnonymizedData;
+import lombok.NonNull;
+import me.amlu.model.Restaurant;
+import me.amlu.model.User;
 
-public interface DataRetentionPolicy {
+public interface AnonymizedDataTransferService {
 
-    int getRetentionDaysBeforeDatabaseRemotion() throws Exception;
+    void exportAnonymizedData(@NonNull User user);
 
-    void applyRetentionPolicy(AnonymizedData data) throws Exception;
-
-    void deleteDataAfterRetentionPeriod(AnonymizedData data, int retentionDays) throws Exception;
-
+    void transferAnonymizedUserData(User user) throws Exception;
+    void transferAnonymizedRestaurantData(Restaurant restaurant) throws Exception; // Transfer restaurant Data
 }

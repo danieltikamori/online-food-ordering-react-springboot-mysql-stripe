@@ -10,10 +10,19 @@
 
 package me.amlu.service;
 
+import me.amlu.model.Order;
+import me.amlu.model.Restaurant;
 import me.amlu.model.User;
 
-public interface DataTransferService {
+public interface DatabaseExportService {
 
-    void exportData(User user);
-    void transferData(User user) throws Exception;
+    void exportAnonymizedUserData(User user, String exportFormat) throws Exception;
+
+    void exportUserData(User user, String exportFormat) throws Exception;
+
+    void exportAnonymizedRestaurantData(Restaurant restaurant, String exportFormat) throws Exception;
+
+    void exportRestaurantData(Restaurant restaurant, String exportFormat) throws Exception;
+
+    void exportOrderData(Order order) throws Exception;
 }
