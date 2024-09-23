@@ -25,8 +25,10 @@ import java.util.List;
 @Data
 @AllArgsConstructor
 @RequiredArgsConstructor
-public class AnonymizedData {
+public abstract class AnonymizedData {
 
+    @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
+    private Long id;
     @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
     User user;
     @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
@@ -70,4 +72,5 @@ public class AnonymizedData {
     @SensitiveData(rolesAllowed = {"ADMIN", "ROOT"})
     private String instagram;
 
+    public abstract void delete() throws Exception;
 }

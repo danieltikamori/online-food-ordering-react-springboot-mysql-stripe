@@ -10,49 +10,59 @@
 
 package me.amlu.service;
 
-import me.amlu.model.AnonymizedData;
 import me.amlu.model.Restaurant;
 import me.amlu.model.User;
 import me.amlu.repository.RestaurantRepository;
 import me.amlu.repository.UserRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
+@Component
 public class AnonymizationScheduler {
+
+    private static final Logger log = LoggerFactory.getLogger(AnonymizationScheduler.class);
 
     private final AnonymizationService anonymizationService;
     private final UserRepository userRepository;
     private final RestaurantRepository restaurantRepository;
     private final NotificationService notificationService;
+    private final int retentionDaysBeforeAnonymization;
 
-
-    public AnonymizationScheduler(AnonymizationService anonymizationService, UserRepository userRepository, RestaurantRepository restaurantRepository, NotificationService notificationService) {
+    public AnonymizationScheduler(AnonymizationService anonymizationService,
+                                  UserRepository userRepository,
+                                  RestaurantRepository restaurantRepository,
+                                  NotificationService notificationService,
+                                  @Value("${data.retention.anonymization.days:90}") int retentionDaysBeforeAnonymization) {
         this.anonymizationService = anonymizationService;
         this.userRepository = userRepository;
         this.restaurantRepository = restaurantRepository;
         this.notificationService = notificationService;
+        this.retentionDaysBeforeAnonymization = retentionDaysBeforeAnonymization;
     }
 
-        @Scheduled(cron = "0 0 0 * * *") // Runs daily at midnight
-    public void scheduleAnonymization(AnonymizedData data, int retentionDaysBeforeAnonymization) {
+    @Scheduled(cron = "0 0 0 * * *")
+    @Transactional
+    public void anonymizeData() {
+        Instant anonymizationThreshold = Instant.now().minus(retentionDaysBeforeAnonymization, ChronoUnit.DAYS);
 
-            Instant anonymizationThreshold = Instant.now().minus(retentionDaysBeforeAnonymization, ChronoUnit.DAYS);
+        List<User> anonymizedUsers = userRepository.findByDeletedAtBefore(anonymizationThreshold);
+        anonymizedUsers.forEach(anonymizationService::anonymizeUser);
 
-            // Find all users deleted before the threshold
-            List<User> usersToAnonymize = userRepository.findByDeletedAtBefore(anonymizationThreshold);
-            for (User user : usersToAnonymize) {
-                anonymizationService.anonymizeUser(user);
-            }
+        List<Restaurant> anonymizedRestaurants = restaurantRepository.findByDeletedAtBefore(anonymizationThreshold);
+        anonymizedRestaurants.forEach(anonymizationService::anonymizeRestaurant);
 
-            // Find all restaurants deleted before the threshold
-            List<Restaurant> restaurantsToAnonymize = restaurantRepository.findByDeletedAtBefore(anonymizationThreshold);
-            for (Restaurant restaurant : restaurantsToAnonymize) {
-                anonymizationService.anonymizeRestaurant(restaurant);
-            }
-
-            notificationService.sendNotification( "Notification: Data was anonymized", Instant.now().toString() + "Data was anonymized");
+        log.info("{} users and {} restaurants were anonymized.", anonymizedUsers.size(), anonymizedRestaurants.size());
+        notificationService.sendNotification(
+                "Data Anonymization Complete",
+                String.format("Anonymized %d users and %d restaurants.", anonymizedUsers.size(), anonymizedRestaurants.size())
+        );
     }
 }

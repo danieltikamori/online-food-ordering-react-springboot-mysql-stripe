@@ -10,15 +10,20 @@
 
 package me.amlu.service;
 
-import me.amlu.model.Restaurant;
-import me.amlu.model.User;
+import com.google.i18n.phonenumbers.Phonenumber;
+import me.amlu.model.*;
+import me.amlu.repository.AddressRepository;
 import me.amlu.repository.RestaurantRepository;
 import me.amlu.repository.UserRepository;
-import me.amlu.service.Tasks.RandomValueGenerator;
+import me.amlu.service.tasks.RandomValueGenerator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.logging.Logger;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import static me.amlu.common.SecurityUtil.getAuthenticatedUser;
 
 @Service
 public class AnonymizationServiceImp implements AnonymizationService {
@@ -28,10 +33,12 @@ public class AnonymizationServiceImp implements AnonymizationService {
     private final NotificationService notificationService;
 
 
+    private static final java.util.logging.Logger log = java.util.logging.Logger.getLogger(AnonymizationServiceImp.class.getName());
 
-    private static final Logger log = Logger.getLogger(AnonymizationServiceImp.class.getName());
+    public static final Logger logger = LogManager.getLogger(AnonymizationServiceImp.class.getName());
 
-    public AnonymizationServiceImp(UserRepository userRepository, RestaurantRepository restaurantRepository, NotificationService notificationService) {
+    public AnonymizationServiceImp(UserRepository userRepository, RestaurantRepository restaurantRepository, NotificationService notificationService,
+                                   AddressRepository addressRepository) {
         this.userRepository = userRepository;
         this.restaurantRepository = restaurantRepository;
         this.notificationService = notificationService;
@@ -42,7 +49,7 @@ public class AnonymizationServiceImp implements AnonymizationService {
         try {
             if (user.getDeletedAt() != null) {
                 // Pseudonymize the user name
-                user.setFullName("Anonymized User");
+                user.setFullName(Instant.now().toString() + "-Anonymized User");
 
                 // De-identify the user email with a random value
                 String newEmail;
@@ -54,46 +61,81 @@ public class AnonymizationServiceImp implements AnonymizationService {
                 user.setEmail(newEmail);
 
 //            // Mask the user password
-//            user.setPassword("********");
+                user.setPassword("********");
 
                 user.setAddresses(null);
                 user.setFavoriteRestaurants(null);
                 user.setCreatedBy(user);
                 user.setAnonymizedAt(Instant.now());
-                user.setAnonymizedBy(user);
+                user.setAnonymizedBy(getAuthenticatedUser());
 
                 // Save the anonymized user to the database
                 userRepository.save(user);
                 log.info(Instant.now().toString() + " - User anonymized successfully");
+                logger.info("User anonymized successfully");
             }
             // Return true to indicate that the user was successfully anonymized
         } catch (Exception e) {
             // Log the exception and return false to indicate that the anonymization failed
             log.severe(Instant.now().toString() + " - Error anonymizing user: " + e.getMessage());
+            logger.error("Error anonymizing user: {}", e.getMessage());
             notificationService.sendNotification(Instant.now().toString() + " - Error anonymizing user: ", e.getMessage());
         }
     }
 
     @Override
     public void anonymizeRestaurant(Restaurant restaurant) {
+
+
         try {
-            // Pseudonymize the restaurant name
-            restaurant.setOwner(null);
-            restaurant.setRestaurantName("Anonymized Restaurant");
+            Address address = restaurant.getAddress();
+            address.setStreetAddress(Instant.now().toString());
+            address.setCity(Instant.now().toString());
+            address.setStateProvince(Instant.now().toString());
+            address.setPostalCode(Instant.now().toString());
+            address.setCountry(Instant.now().toString());
+
+            User owner = restaurant.getOwner();
+            owner.setFullName(Instant.now().toString() + "-Anonymized User");
+            owner.setEmail(RandomValueGenerator.generateRandomValue() + "@anonymizedUserEmail.com");
+            owner.setPassword("********");
+            owner.setAddresses(null);
+            owner.setFavoriteRestaurants(null);
+            owner.setAnonymizedAt(Instant.now());
+            owner.setAnonymizedBy(getAuthenticatedUser());
+
+            ContactInformation contactInformation = restaurant.getContactInformation();
+            contactInformation.setEmail(RandomValueGenerator.generateRandomValue() + "@anonymizedRestaurantEmail.com");
+            Phonenumber.PhoneNumber phoneNumber = contactInformation.getPhoneNumber();
+            phoneNumber.setCountryCode(0);
+            phoneNumber.setNationalNumber(0);
+            phoneNumber.setExtension("0");
+            contactInformation.setPhoneNumber(phoneNumber);
+            contactInformation.setMobile(null);
+            contactInformation.setWebsite(null);
+            contactInformation.setTwitter(null);
+            contactInformation.setInstagram(null);
+
+            CopyOnWriteArrayList<String> images = new CopyOnWriteArrayList<>();
+            for (String image : restaurant.getImagesURL()) images.replaceAll(s -> "https://anonymized.com/img/");
+
+            restaurant.setOwner(owner);
+            restaurant.setRestaurantName(Instant.now().toString() + "-Anonymized Restaurant");
             restaurant.setCuisineType(null);
-            restaurant.setAddress(null);
+            restaurant.setAddress(address);
             restaurant.setDescription(null);
-            restaurant.setContactInformation(null);
-            restaurant.setOpeningHours(null);
-            restaurant.setImages(null);
+            restaurant.setContactInformation(contactInformation);
+            restaurant.setOpeningHours("Anonymized Opening Hours");
+            restaurant.setImagesURL(images);
             restaurant.setOpenNow(false);
             restaurant.setAnonymizedAt(Instant.now());
-            restaurant.setAnonymizedBy((restaurant.getOwner()));
+            restaurant.setAnonymizedBy(getAuthenticatedUser());
 
 
             // Save the anonymized restaurant to the database
             restaurantRepository.save(restaurant);
             log.info(Instant.now().toString() + " - Restaurant anonymized successfully");
+            logger.info("Restaurant anonymized successfully");
             // Return true to indicate that the restaurant was successfully anonymized
         } catch (Exception e) {
             // Log the exception and return false to indicate that the anonymization failed
@@ -102,21 +144,13 @@ public class AnonymizationServiceImp implements AnonymizationService {
         }
     }
 
-
     @Override
     public boolean isUserAnonymized(User user) {
-        return user.getFullName().equals("Anonymized User")
-                && user.getEmail() != null && !user.getEmail().isEmpty()
-                && user.getEmail().endsWith("@anonymizedUserEmail.com")
-                && user.getPassword().equals("********");
+        return user.getAnonymizedAt() != null;
     }
 
     @Override
     public boolean isRestaurantAnonymized(Restaurant restaurant) {
-        return restaurant.getOwner() == null && restaurant.getRestaurantName().equals("Anonymized Restaurant") &&
-                restaurant.getAddress() == null &&
-                restaurant.getDescription() == null &&
-                restaurant.getContactInformation() == null &&
-                restaurant.getImages() == null;
+        return restaurant.getAnonymizedAt() != null;
     }
 }
