@@ -16,8 +16,11 @@ import me.amlu.repository.RestaurantRepository;
 import me.amlu.repository.UserRepository;
 import me.amlu.service.*;
 import me.amlu.service.tasks.RecordCleanupTask;
+import org.springframework.boot.web.embedded.tomcat.TomcatProtocolHandlerCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.AsyncTaskExecutor;
+import org.springframework.core.task.support.TaskExecutorAdapter;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.config.annotation.authentication.configuration.EnableGlobalAuthentication;
@@ -38,6 +41,7 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Executors;
 
 @Configuration
 @EnableWebSecurity
@@ -114,6 +118,20 @@ public class AppConfig {
     protected void configure(HttpSecurity http) throws Exception {
         http.addFilterBefore(jwtTokenValidator(), UsernamePasswordAuthenticationFilter.class);
     }
+
+    // Virtual Thread Executor - allow virtual threads executing async tasks
+    @Bean
+    public AsyncTaskExecutor asyncTaskExecutor() {
+        return new TaskExecutorAdapter(Executors.newVirtualThreadPerTaskExecutor());
+    }
+
+    // Virtual Thread Executor - allow virtual threads executing async tasks managed by Tomcat's protocol handler
+    @Bean
+    public TomcatProtocolHandlerCustomizer<?> protocolHandlerVirtualThreadExecutorCustomizer() {
+        return protocolHandler -> {
+            protocolHandler.setExecutor(Executors.newVirtualThreadPerTaskExecutor());
+        };
+        }
 
     @Bean
     public NotificationService notificationService() {
