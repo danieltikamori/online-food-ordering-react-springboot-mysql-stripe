@@ -4,7 +4,7 @@
 
 ## Overview
 
-Multivendor(multiple restaurants) food ordering application. It allows users to order food from multiple restaurants.
+Multi vendor(multiple restaurants) food ordering application. It allows users to order food from multiple restaurants.
 Frontend is built with React and backend is built with Spring Boot. Plan to deploy it on AWS EKS(Kubernetes) using IaC and automated CI/CD pipeline.
 
 Currently, using MySQL as a database, plan to be able to use PostgreSQL (known as Postgres) as well.
@@ -19,7 +19,9 @@ ArgoCD, Prometheus, Grafana, Elasticsearch, Kibana, Logstash, etc.
 
 Java using the power of Spring Boot, Java 21 version features, Native Image, GraalVM, etc.
 
-Also implement a notification system to send notifications to Slack and email.
+Also implement a notification system to send notifications to Slack channel and email.
+
+For backup and restore, use AWS S3.
 
 ## Requirements
 
@@ -39,7 +41,7 @@ Also implement a notification system to send notifications to Slack and email.
 - Logstash
 - AWS EKS
 - React
-
+- AWS S3 (To store backups of a database and other files)
 
 ## API testing
 
@@ -75,6 +77,17 @@ Also implement a notification system to send notifications to Slack and email.
 
 ## Usage
 
+To compile in native image, use:
+
+`./mvnw -Pnative native:compile`
+
+Perhaps `mvn clean package -Pnative`
+
+For Gradle, use:
+
+`./gradlew nativeCompile`
+
+
 ## Contributing
 
 You are welcome to contribute. See LICENSE for details.
@@ -85,6 +98,10 @@ See [LICENSE](LICENSE).
 
 ## TODOs:
 
+Finish Virtual threads and asynchronous messaging.
+
+See virtual threads possible drawbacks:
+https://quarkus.io/blog/virtual-thread-1/#five-things-you-need-to-know-before-using-virtual-threads-for-everything)
 
 Now, let's talk about performance. The current implementation using EntityUniquenessService and the findByCategoryNameAndRestaurant method in IngredientCategoryRepository is a reasonable approach. However, there are a few things we can do to potentially improve performance:
 1. AUTOMATICALLY IMPLEMENTED? - Database Indexing:
